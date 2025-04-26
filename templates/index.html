@@ -4,16 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>服务导航与文件下载</title>
+    <title>{{ site_title }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3f37c9;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --success-color: #4cc9f0;
-            --border-radius: 8px;
-            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --primary-color: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary-color: #689f38;
+            --light-color: #9bcb91;
+            --dark-color: #263238;
+            --text-color: #424242;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             --transition: all 0.3s ease;
         }
 
@@ -21,51 +24,94 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: #f5f7fa;
-            color: var(--dark-color);
+            background-color: #f5f5f5;
+            color: var(--text-color);
             line-height: 1.6;
-            padding: 0;
-            margin: 0;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1rem;
         }
 
         header {
             text-align: center;
             margin-bottom: 2rem;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
             color: white;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.05)" d="M0,0 L100,0 L100,100 Q50,80 0,100 Z"></path></svg>');
+            background-size: 100% 100%;
+            opacity: 0.5;
         }
 
         h1 {
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
         }
 
         h2 {
             font-size: 1.8rem;
-            margin: 2rem 0 1rem;
-            color: var(--secondary-color);
-            border-bottom: 2px solid var(--primary-color);
+            margin: 2rem 0 1.5rem;
+            color: var(--primary-dark);
             padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-light);
+            display: inline-block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            width: 250px;
+            transition: var(--transition);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 1.5rem;
-            margin: 2rem 0;
+            margin-bottom: 3rem;
         }
 
         .card {
@@ -74,26 +120,29 @@
             padding: 1.5rem;
             box-shadow: var(--box-shadow);
             transition: var(--transition);
-            border-left: 4px solid var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border-top: 4px solid var(--primary-color);
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
         }
 
         .service-card {
+            text-align: center;
             background: white;
             border-radius: var(--border-radius);
             padding: 1.5rem;
             box-shadow: var(--box-shadow);
             transition: var(--transition);
-            text-align: center;
+            border-top: 4px solid var(--secondary-color);
         }
 
         .service-card:hover {
-            background: var(--primary-color);
-            color: white;
+            background: var(--light-color);
         }
 
         .service-card a {
@@ -103,65 +152,108 @@
             height: 100%;
         }
 
+        .service-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
         .service-card h3 {
             margin-bottom: 0.5rem;
             font-size: 1.3rem;
+            color: var(--primary-dark);
         }
 
-        .download-card {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+        .service-port {
+            display: inline-block;
+            background: var(--light-color);
+            color: var(--primary-dark);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
         }
 
-        .download-card h3 {
-            margin-bottom: 0.5rem;
+        .file-icon {
+            font-size: 2rem;
             color: var(--primary-color);
+            margin-bottom: 1rem;
         }
 
         .file-info {
-            margin: 0.5rem 0;
-            font-size: 0.9rem;
-            color: #666;
             flex-grow: 1;
+        }
+
+        .file-info h3 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+            word-break: break-all;
+        }
+
+        .file-description {
+            color: #666;
+            margin-bottom: 1rem;
         }
 
         .file-meta {
             display: flex;
             justify-content: space-between;
-            margin-top: 0.5rem;
-            font-size: 0.8rem;
-            color: #888;
+            font-size: 0.85rem;
+            color: #777;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px dashed #ddd;
         }
 
         .btn {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background: var(--primary-color);
             color: white;
-            padding: 0.6rem 1.2rem;
+            padding: 0.7rem 1.5rem;
             border-radius: var(--border-radius);
             text-decoration: none;
             transition: var(--transition);
             border: none;
             cursor: pointer;
-            text-align: center;
+            font-weight: 500;
             margin-top: 1rem;
         }
 
         .btn:hover {
-            background: var(--secondary-color);
+            background: var(--primary-dark);
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-download {
-            align-self: flex-start;
+        .btn i {
+            margin-right: 0.5rem;
         }
 
         .empty-state {
             text-align: center;
-            padding: 2rem;
+            padding: 3rem;
             color: #666;
             grid-column: 1 / -1;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 2rem;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
         }
 
         @media (max-width: 768px) {
@@ -170,7 +262,17 @@
             }
 
             .container {
-                padding: 1rem;
+                padding: 0.5rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .search-box {
+                width: 100%;
+                margin-top: 1rem;
             }
         }
     </style>
@@ -179,53 +281,97 @@
 <body>
     <div class="container">
         <header>
-            <h1>服务导航中心</h1>
-            <p>快速访问各项服务与资源下载</p>
+            <h1>{{ site_title }}</h1>
+            <p class="header-description">一站式访问所有服务与资源</p>
         </header>
 
         <section>
-            <h2>可用服务</h2>
+            <div class="section-header">
+                <h2><i class="fas fa-server"></i> 可用服务</h2>
+            </div>
             <div class="grid">
                 {% for service, info in services.items() %}
                 <div class="service-card">
                     <a href="/{{ service }}">
+                        <div class="service-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
                         <h3>{{ info.name }}</h3>
-                        <p>端口: {{ info.port }}</p>
+                        <div class="service-port">端口: {{ info.port }}</div>
                     </a>
                 </div>
                 {% else %}
                 <div class="empty-state">
-                    <p>暂无可用服务</p>
+                    <i class="fas fa-cloud"></i>
+                    <h3>暂无可用服务</h3>
+                    <p>当前没有配置任何服务</p>
                 </div>
                 {% endfor %}
             </div>
         </section>
 
         <section>
-            <h2>文件下载</h2>
-            <div class="grid">
+            <div class="section-header">
+                <h2><i class="fas fa-file-download"></i> 文件下载</h2>
+                <input type="text" class="search-box" placeholder="搜索文件..." id="search">
+            </div>
+            <div class="grid" id="downloads-grid">
                 {% for file in downloads %}
-                <div class="card">
-                    <div class="download-card">
-                        <h3>{{ file.name }}</h3>
-                        <div class="file-info">
-                            <p>{{ file.description }}</p>
-                        </div>
-                        <div class="file-meta">
-                            <span>{{ (file.size/1024)|round(2) }} KB</span>
-                            <span>{{ file.filename.split('.')[-1]|upper }} 文件</span>
-                        </div>
-                        <a href="/download/{{ file.filename }}" class="btn btn-download">下载文件</a>
+                <div class="card" data-name="{{ file.name }}">
+                    <div class="file-icon">
+                        <i class="fas fa-{{ file.icon }}"></i>
                     </div>
+                    <div class="file-info">
+                        <h3>{{ file.name }}</h3>
+                        <p class="file-description">{{ file.description }}</p>
+                    </div>
+                    <div class="file-meta">
+                        <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
+                        <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+                    </div>
+                    <a href="/download/{{ file.filename }}" class="btn">
+                        <i class="fas fa-download"></i> 下载
+                    </a>
                 </div>
                 {% else %}
                 <div class="empty-state">
-                    <p>暂无可用文件</p>
+                    <i class="fas fa-file"></i>
+                    <h3>暂无可用文件</h3>
+                    <p>static/files 目录中没有可下载的文件</p>
                 </div>
                 {% endfor %}
             </div>
         </section>
+
+        <footer>
+            <p>© {{ now().year }} {{ site_title }} - 所有权利保留</p>
+        </footer>
     </div>
+
+    <script>
+        // 文件搜索功能
+        document.getElementById('search').addEventListener('input', function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('#downloads-grid .card');
+
+            cards.forEach(card => {
+                const fileName = card.getAttribute('data-name').toLowerCase();
+                if (fileName.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // 获取当前年份
+        document.addEventListener('DOMContentLoaded', function () {
+            const yearElement = document.querySelector('footer p');
+            if (yearElement) {
+                yearElement.textContent = yearElement.textContent.replace('{{ now().year }}', new Date().getFullYear());
+            }
+        });
+    </script>
 </body>
 
 </html>
