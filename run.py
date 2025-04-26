@@ -109,8 +109,8 @@ def get_downloadable_files():
                 )
 
         if category_files:
-            # 按上传时间倒序排列
-            category_files.sort(key=lambda x: x["upload_time"], reverse=True)
+            # 按文件名的首字母排序
+            category_files.sort(key=lambda x: x["filename"][0])
             categories[category_name] = category_files
 
     # 处理根目录下的文件（无分类文件）
