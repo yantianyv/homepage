@@ -25,7 +25,7 @@ def load_config():
     else:
         return {
             "domain": "http://localhost",
-            "site_title": "初次使用请设置域名和标题",
+            "site_title": "初次使用请运行set_cfg.py设置域名和标题",
             "services": {},
         }
 

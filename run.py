@@ -3,6 +3,8 @@ import os
 from flask import Flask, render_template, redirect, send_from_directory
 from pathlib import Path
 from datetime import datetime
+import set_cfg
+
 
 app = Flask(__name__)
 
@@ -14,9 +16,11 @@ def inject_now():
 
 
 # 读取配置文件
-with open("config.json", "r", encoding="utf-8") as f:
-    config_data = json.load(f)
-
+try:
+    with open("config.json", "r", encoding="utf-8") as f:
+        config_data = json.load(f)
+except:
+    set_cfg.main_menu()
 # 获取域名配置
 domain = config_data["domain"]
 
