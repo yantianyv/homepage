@@ -1,5 +1,7 @@
 import json
-from flask import Flask, render_template, redirect
+import os
+from flask import Flask, render_template, redirect, send_from_directory
+from pathlib import Path
 
 app = Flask(__name__)
 
@@ -11,25 +13,54 @@ with open("config.json", "r", encoding="utf-8") as f:
 domain = config_data["domain"]
 
 
-# 首页路由，显示动态导航网页
+# 获取可下载文件列表
+def get_downloadable_files():
+    files_dir = os.path.join(app.root_path, "static/files")
+    files = []
+    for filename in os.listdir(files_dir):
+        filepath = os.path.join(files_dir, filename)
+        if os.path.isfile(filepath):
+            files.append(
+                {
+                    "name": filename,
+                    "filename": filename,
+                    "size": os.path.getsize(filepath),
+                    "description": f"{filename} ({Path(filename).suffix[1:].upper()}文件)",
+                }
+            )
+    return files
+
+
+# 首页路由
 @app.route("/")
 def index():
-    # 获取配置文件中的跳转项
-    return render_template("index.html", services=config_data["services"])
+    return render_template(
+        "index.html",
+        services=config_data["services"],
+        downloads=get_downloadable_files(),
+    )
 
 
 # 动态跳转路由
 @app.route("/<service>")
 def redirect_to_service(service):
-    # 查找配置中的对应服务
     if service in config_data["services"]:
-        # 获取服务的端口号
         port = config_data["services"][service]["port"]
-        # 构造完整的 URL
-        url = f"http://{domain}:{port}"  # Add http:// prefix
+        url = f"http://{domain}:{port}"
         return redirect(url)
     else:
         return "服务未找到", 404
+
+
+# 文件下载路由
+@app.route("/download/<filename>")
+def download_file(filename):
+    try:
+        return send_from_directory(
+            os.path.join(app.root_path, "static/files"), filename, as_attachment=True
+        )
+    except FileNotFoundError:
+        return "文件不存在", 404
 
 
 if __name__ == "__main__":

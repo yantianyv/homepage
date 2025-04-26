@@ -1,41 +1,231 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>导航页面</title>
+    <title>服务导航与文件下载</title>
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
             text-align: center;
-            padding: 50px;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
         }
+
         h1 {
-            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
         }
+
+        h2 {
+            font-size: 1.8rem;
+            margin: 2rem 0 1rem;
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .service-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .service-card:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .service-card a {
+            color: inherit;
+            text-decoration: none;
+            display: block;
+            height: 100%;
+        }
+
+        .service-card h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .download-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .download-card h3 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .file-info {
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+            color: #666;
+            flex-grow: 1;
+        }
+
+        .file-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
         .btn {
             display: inline-block;
-            padding: 15px 30px;
-            font-size: 18px;
-            margin: 10px;
-            background-color: #4CAF50;
+            background: var(--primary-color);
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--border-radius);
             text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 1rem;
         }
+
         .btn:hover {
-            background-color: #45a049;
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-download {
+            align-self: flex-start;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
-<body>
-    <h1>请选择跳转的服务</h1>
-    {% for service, details in services.items() %}
-        <a href="/{{ service }}" class="btn">{{ details.name }}</a>
-    {% endfor %}
-</body>
-</html>
 
+<body>
+    <div class="container">
+        <header>
+            <h1>服务导航中心</h1>
+            <p>快速访问各项服务与资源下载</p>
+        </header>
+
+        <section>
+            <h2>可用服务</h2>
+            <div class="grid">
+                {% for service, info in services.items() %}
+                <div class="service-card">
+                    <a href="/{{ service }}">
+                        <h3>{{ info.name }}</h3>
+                        <p>端口: {{ info.port }}</p>
+                    </a>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>暂无可用服务</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section>
+            <h2>文件下载</h2>
+            <div class="grid">
+                {% for file in downloads %}
+                <div class="card">
+                    <div class="download-card">
+                        <h3>{{ file.name }}</h3>
+                        <div class="file-info">
+                            <p>{{ file.description }}</p>
+                        </div>
+                        <div class="file-meta">
+                            <span>{{ (file.size/1024)|round(2) }} KB</span>
+                            <span>{{ file.filename.split('.')[-1]|upper }} 文件</span>
+                        </div>
+                        <a href="/download/{{ file.filename }}" class="btn btn-download">下载文件</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>暂无可用文件</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>
