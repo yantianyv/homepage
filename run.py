@@ -69,14 +69,57 @@ def get_downloadable_files():
             custom_descriptions = json.load(f)
 
     files_dir = os.path.join(app.root_path, "static/files")
-    files = []
-    for filename in os.listdir(files_dir):
-        if filename == "descriptions.json":
+    categories = {}
+
+    # 遍历文件目录
+    for root, dirs, files in os.walk(files_dir):
+        # 跳过根目录下的文件（直接放在files下的文件）
+        if root == files_dir:
             continue
+
+        # 获取相对路径作为分类名
+        rel_path = os.path.relpath(root, files_dir)
+        if rel_path == ".":
+            continue
+
+        category_name = rel_path.replace(os.sep, " / ")
+        category_files = []
+
+        for filename in files:
+            if filename == "descriptions.json":
+                continue
+
+            filepath = os.path.join(root, filename)
+            if os.path.isfile(filepath):
+                stat = os.stat(filepath)
+                category_files.append(
+                    {
+                        "name": filename,
+                        "filename": os.path.join(rel_path, filename),  # 包含相对路径
+                        "size": stat.st_size,
+                        "formatted_size": format_size(stat.st_size),
+                        "icon": get_file_icon(filename),
+                        "upload_time": datetime.fromtimestamp(stat.st_mtime).strftime(
+                            "%Y-%m-%d %H:%M"
+                        ),
+                        "description": custom_descriptions.get(
+                            filename, f"{Path(filename).suffix[1:].upper()}文件"
+                        ),
+                    }
+                )
+
+        if category_files:
+            # 按上传时间倒序排列
+            category_files.sort(key=lambda x: x["upload_time"], reverse=True)
+            categories[category_name] = category_files
+
+    # 处理根目录下的文件（无分类文件）
+    root_files = []
+    for filename in os.listdir(files_dir):
         filepath = os.path.join(files_dir, filename)
-        if os.path.isfile(filepath):
+        if os.path.isfile(filepath) and filename != "descriptions.json":
             stat = os.stat(filepath)
-            files.append(
+            root_files.append(
                 {
                     "name": filename,
                     "filename": filename,
@@ -91,9 +134,12 @@ def get_downloadable_files():
                     ),
                 }
             )
-    # 按上传时间倒序排列
-    files.sort(key=lambda x: x["upload_time"], reverse=True)
-    return files
+
+    if root_files:
+        root_files.sort(key=lambda x: x["upload_time"], reverse=True)
+        categories["未分类"] = root_files
+
+    return categories
 
 
 # 首页路由
@@ -119,7 +165,7 @@ def redirect_to_service(service):
 
 
 # 文件下载路由
-@app.route("/download/<filename>")
+@app.route("/download/<path:filename>")
 def download_file(filename):
     try:
         return send_from_directory(

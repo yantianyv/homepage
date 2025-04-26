@@ -256,6 +256,98 @@
             border-top: 1px solid #eee;
         }
 
+        /* 分类样式 - 重点修改部分 */
+        .category-section {
+            margin-bottom: 1rem;
+        }
+
+        .category-title {
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+            padding: 0.8rem 1.2rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: var(--transition);
+            border: none;
+            width: 100%;
+            text-align: left;
+            /* 收起状态 - 绿色背景白色文字 */
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: var(--box-shadow);
+        }
+
+        /* 展开状态 - 透明背景绿色文字 */
+        .category-title:not(.collapsed) {
+            background-color: transparent;
+            color: var(--primary-dark);
+            box-shadow: none;
+            padding-left: 0.5rem;
+        }
+
+        .category-title:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-title:not(.collapsed):hover {
+            box-shadow: none;
+            transform: none;
+        }
+
+        .category-title i.fa-folder {
+            margin-right: 0.8rem;
+            font-size: 1.3rem;
+            transition: var(--transition);
+        }
+
+        /* 收起状态文件夹图标白色 */
+        .category-title i.fa-folder {
+            color: white;
+        }
+
+        /* 展开状态文件夹图标绿色 */
+        .category-title:not(.collapsed) i.fa-folder {
+            color: var(--primary-color);
+        }
+
+        .category-title i.fa-chevron-down {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .category-title.collapsed i.fa-chevron-down {
+            transform: rotate(-90deg);
+        }
+
+        .category-count {
+            background-color: rgba(255, 255, 255, 0.3);
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+        }
+
+        .category-title:not(.collapsed) .category-count {
+            background-color: rgba(46, 125, 50, 0.1);
+            color: var(--primary-dark);
+        }
+
+        .category-files {
+            transition: all 0.3s ease;
+            overflow: hidden;
+            padding: 0.5rem 0 1rem 1.5rem;
+        }
+
+        .category-files.collapsed {
+            max-height: 0 !important;
+            padding: 0 0 0 1.5rem;
+            opacity: 0;
+        }
+
         @media (max-width: 768px) {
             .grid {
                 grid-template-columns: 1fr;
@@ -273,6 +365,11 @@
             .search-box {
                 width: 100%;
                 margin-top: 1rem;
+            }
+
+            .category-title {
+                padding: 0.7rem 1rem;
+                font-size: 1.1rem;
             }
         }
     </style>
@@ -315,32 +412,45 @@
                 <h2><i class="fas fa-file-download"></i> 文件下载</h2>
                 <input type="text" class="search-box" placeholder="搜索文件..." id="search">
             </div>
-            <div class="grid" id="downloads-grid">
-                {% for file in downloads %}
-                <div class="card" data-name="{{ file.name }}">
-                    <div class="file-icon">
-                        <i class="fas fa-{{ file.icon }}"></i>
+
+            {% for category, files in downloads.items() %}
+            <div class="category-section">
+                <button class="category-title collapsed" onclick="toggleCategory(this)">
+                    <span>
+                        <i class="fas fa-folder"></i>
+                        {{ category }}
+                        <span class="category-count">{{ files|length }}</span>
+                    </span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="grid category-files collapsed" id="category-{{ loop.index }}">
+                    {% for file in files %}
+                    <div class="card" data-name="{{ file.name }}">
+                        <div class="file-icon">
+                            <i class="fas fa-{{ file.icon }}"></i>
+                        </div>
+                        <div class="file-info">
+                            <h3>{{ file.name }}</h3>
+                            <p class="file-description">{{ file.description }}</p>
+                        </div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
+                            <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+                        </div>
+                        <a href="/download/{{ file.filename }}" class="btn">
+                            <i class="fas fa-download"></i> 下载
+                        </a>
                     </div>
-                    <div class="file-info">
-                        <h3>{{ file.name }}</h3>
-                        <p class="file-description">{{ file.description }}</p>
-                    </div>
-                    <div class="file-meta">
-                        <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
-                        <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
-                    </div>
-                    <a href="/download/{{ file.filename }}" class="btn">
-                        <i class="fas fa-download"></i> 下载
-                    </a>
+                    {% endfor %}
                 </div>
-                {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-file"></i>
-                    <h3>暂无可用文件</h3>
-                    <p>static/files 目录中没有可下载的文件</p>
-                </div>
-                {% endfor %}
             </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file"></i>
+                <h3>暂无可用文件</h3>
+                <p>static/files 目录中没有可下载的文件</p>
+            </div>
+            {% endfor %}
         </section>
 
         <footer>
@@ -352,17 +462,84 @@
         // 文件搜索功能
         document.getElementById('search').addEventListener('input', function (e) {
             const searchTerm = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('#downloads-grid .card');
+            const cards = document.querySelectorAll('.card');
+            let hasResults = false;
 
+            // 先隐藏所有卡片和分类
+            document.querySelectorAll('.category-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // 搜索匹配的文件
             cards.forEach(card => {
                 const fileName = card.getAttribute('data-name').toLowerCase();
                 if (fileName.includes(searchTerm)) {
                     card.style.display = 'flex';
+                    // 显示包含匹配文件的分类
+                    const categorySection = card.closest('.category-section');
+                    if (categorySection) {
+                        categorySection.style.display = 'block';
+                        // 展开分类
+                        const categoryFiles = categorySection.querySelector('.category-files');
+                        categoryFiles.classList.remove('collapsed');
+                        const categoryTitle = categorySection.querySelector('.category-title');
+                        categoryTitle.classList.remove('collapsed');
+                    }
+                    hasResults = true;
                 } else {
                     card.style.display = 'none';
                 }
             });
+
+            // 如果没有搜索结果，显示提示
+            if (!hasResults && searchTerm) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = `
+                    <i class="fas fa-search"></i>
+                    <h3>没有找到匹配的文件</h3>
+                    <p>请尝试其他搜索关键词</p>
+                `;
+
+                const downloadSection = document.querySelector('section:nth-of-type(2)');
+                // 移除旧的空状态提示（如果有）
+                const oldEmptyState = downloadSection.querySelector('.empty-state');
+                if (oldEmptyState) {
+                    oldEmptyState.remove();
+                }
+                downloadSection.appendChild(emptyState);
+            } else if (!searchTerm) {
+                // 清空搜索框时恢复所有内容
+                document.querySelectorAll('.category-section').forEach(section => {
+                    section.style.display = 'block';
+                });
+                document.querySelectorAll('.card').forEach(card => {
+                    card.style.display = 'flex';
+                });
+                // 移除空状态提示（如果有）
+                const emptyState = document.querySelector('section:nth-of-type(2) .empty-state');
+                if (emptyState && emptyState.querySelector('h3').textContent === '没有找到匹配的文件') {
+                    emptyState.remove();
+                }
+            }
         });
+
+        // 分类折叠功能
+        function toggleCategory(element) {
+            const categoryId = element.nextElementSibling.id;
+            const categoryFiles = document.getElementById(categoryId);
+
+            element.classList.toggle('collapsed');
+            categoryFiles.classList.toggle('collapsed');
+        }
+
+        // // 页面加载时默认展开第一个分类
+        // document.addEventListener('DOMContentLoaded', function () {
+        //     const firstCategory = document.querySelector('.category-title');
+        //     if (firstCategory) {
+        //         toggleCategory(firstCategory);
+        //     }
+        // });
 
         // 获取当前年份
         document.addEventListener('DOMContentLoaded', function () {
