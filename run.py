@@ -25,29 +25,43 @@ except:
 domain = config_data["domain"]
 
 
-# 获取文件图标类型
+from pathlib import Path
+
+
 def get_file_icon(filename):
-    extension = Path(filename).suffix.lower()
-    icon_map = {
-        ".pdf": "file-pdf",
-        ".zip": "file-archive",
-        ".rar": "file-archive",
-        ".doc": "file-word",
-        ".docx": "file-word",
-        ".xls": "file-excel",
-        ".xlsx": "file-excel",
-        ".ppt": "file-powerpoint",
-        ".pptx": "file-powerpoint",
-        ".txt": "file-alt",
-        ".jpg": "file-image",
-        ".jpeg": "file-image",
-        ".png": "file-image",
-        ".gif": "file-image",
-        ".mp3": "file-audio",
-        ".mp4": "file-video",
-        ".exe": "file-code",
+    # 定义不同图标对应的后缀列表
+    # fmt: off
+    icon_groups = {
+        # 压缩包
+        "file-zipper": [".zip", ".rar", ".7z"],
+        "box": [".tar", ".xz", ".gz"],
+        # 文档
+        "file-pdf": [".pdf"],
+        "file-word": [".doc", ".docx"],
+        "file-excel": [".xls", ".xlsx"],
+        "file-powerpoint": [".ppt", ".pptx"],
+        "file-lines": [".txt"],
+        "book": [".md"],
+        # 媒体
+        "file-image": [".jpg", ".jpeg", ".png", ".gif"],
+        "file-audio": [".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac"],
+        "file-video": [".mp4", ".avi", ".mkv", ".mov", ".flv", ".wmv", ".webm", ".3gp", ".mpg", ".mpeg", ".m4v", ".rmvb", ".rm"],
+        #可执行文件
+        "cubes": [".exe", ".bin", ".jar"],
+        # 代码
+        "file-code": [".py", ".c", ".cpp", ".java", ".html", ".css", ".js", ".json", ".xml", ".go", ".rs", ".swift", ".kt", ".rb", ".php"],
+        "terminal":[".sh",".bat"],
+        # 数据库
+        "database": [".db", ".sql", ".sqlite"],
     }
-    return icon_map.get(extension, "file")
+    # fmt: on
+    extension = Path(filename).suffix.lower()
+
+    # 遍历分组，查找对应图标
+    for icon, extensions in icon_groups.items():
+        if extension in extensions:
+            return icon
+    return "file"  # 默认图标
 
 
 # 格式化文件大小
@@ -99,12 +113,8 @@ def get_downloadable_files():
                         "size": stat.st_size,
                         "formatted_size": format_size(stat.st_size),
                         "icon": get_file_icon(filename),
-                        "upload_time": datetime.fromtimestamp(stat.st_mtime).strftime(
-                            "%Y-%m-%d %H:%M"
-                        ),
-                        "description": custom_descriptions.get(
-                            filename, f"{Path(filename).suffix[1:].upper()}文件"
-                        ),
+                        "upload_time": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M"),
+                        "description": custom_descriptions.get(filename, f"{Path(filename).suffix[1:].upper()}文件"),
                     }
                 )
 
@@ -126,12 +136,8 @@ def get_downloadable_files():
                     "size": stat.st_size,
                     "formatted_size": format_size(stat.st_size),
                     "icon": get_file_icon(filename),
-                    "upload_time": datetime.fromtimestamp(stat.st_mtime).strftime(
-                        "%Y-%m-%d %H:%M"
-                    ),
-                    "description": custom_descriptions.get(
-                        filename, f"{Path(filename).suffix[1:].upper()}文件"
-                    ),
+                    "upload_time": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M"),
+                    "description": custom_descriptions.get(filename, f"{Path(filename).suffix[1:].upper()}文件"),
                 }
             )
 
@@ -168,9 +174,7 @@ def redirect_to_service(service):
 @app.route("/download/<path:filename>")
 def download_file(filename):
     try:
-        return send_from_directory(
-            os.path.join(app.root_path, "static/files"), filename, as_attachment=True
-        )
+        return send_from_directory(os.path.join(app.root_path, "static/files"), filename, as_attachment=True)
     except FileNotFoundError:
         return "文件不存在", 404
 
