@@ -75,7 +75,6 @@
         input[type="file"] {
             padding: 0.5rem;
             display: none;
-            /* 隐藏浏览按钮 */
         }
 
         input:focus,
@@ -141,28 +140,6 @@
             display: none;
         }
 
-        .flash-messages {
-            margin-bottom: 1.5rem;
-        }
-
-        .flash-message {
-            padding: 0.8rem 1rem;
-            margin-bottom: 0.5rem;
-            border-radius: var(--border-radius);
-        }
-
-        .flash-error {
-            background: #ffebee;
-            color: #c62828;
-            border: 1px solid #ef9a9a;
-        }
-
-        .flash-success {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #a5d6a7;
-        }
-
         .back-link {
             display: inline-block;
             margin-top: 1.5rem;
@@ -202,6 +179,79 @@
             background: #e8f5e9;
             border-color: var(--primary-light);
         }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: modalopen 0.3s;
+        }
+
+        @keyframes modalopen {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+
+        .modal-body {
+            padding: 10px 0;
+            margin-bottom: 15px;
+        }
+
+        .modal-footer {
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+
+        .close-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .success {
+            color: #2e7d32;
+        }
+
+        .error {
+            color: #c62828;
+        }
     </style>
 </head>
 
@@ -210,32 +260,21 @@
         <div class="upload-box">
             <h1><i class="fas fa-upload"></i> 上传临时文件</h1>
 
-            <div class="flash-messages">
-                {% if uploaded == 'true' %}
-                <div class="flash-message flash-success">文件上传成功！</div>
-                {% endif %}
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">{{ message }}</div>
-                {% endfor %}
-                {% endif %}
-                {% endwith %}
-            </div>
-
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
                 <div class="form-group">
                     <label for="file" class="dropzone" id="dropzone">
                         <i class="fas fa-cloud-upload-alt"></i><br>
                         点击或拖拽文件到这里上传
                     </label>
                     <input type="file" name="file" id="file" required>
-                    <button type="button" class="btn delete-btn" id="delete-btn" style="display: none;">
-                        <i class="fas fa-trash"></i> 删除文件
-                    </button>
+
                     <div class="file-info" id="file-info">
                         <strong>文件名:</strong> <span id="file-name"></span><br>
-                        <strong>大小:</strong> <span id="file-size"></span>
+                        <strong>大小:</strong> <span id="file-size"></span><br>
+                        <button type="button" class="btn delete-btn" id="delete-btn"
+                            style="display: none; width: auto;">
+                            <i class="fas fa-trash"></i>&nbsp; 重新选择
+                        </button>
                     </div>
                 </div>
 
@@ -259,6 +298,21 @@
         </div>
     </div>
 
+    <!-- 弹窗 -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">提示</h2>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">这里是消息内容</p>
+            </div>
+            <div class="modal-footer">
+                <button class="close-btn" id="modalCloseBtn">确定</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const fileInput = document.getElementById('file');
         const dropzone = document.getElementById('dropzone');
@@ -266,13 +320,18 @@
         const fileInfo = document.getElementById('file-info');
         const fileName = document.getElementById('file-name');
         const fileSize = document.getElementById('file-size');
+        const uploadForm = document.getElementById('uploadForm');
+        const modal = document.getElementById('messageModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
 
         // 文件选中后
         fileInput.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
-                dropzone.style.display = 'none'; // 隐藏虚线框
-                deleteBtn.style.display = 'inline-block'; // 显示删除按钮
+                dropzone.style.display = 'none';
+                deleteBtn.style.display = 'inline-block';
                 fileName.textContent = file.name;
                 fileSize.textContent = formatFileSize(file.size);
                 fileInfo.style.display = 'block';
@@ -283,7 +342,7 @@
 
         // 点击删除按钮
         deleteBtn.addEventListener('click', function () {
-            fileInput.value = ''; // 清空input
+            fileInput.value = '';
             resetUpload();
         });
 
@@ -308,11 +367,49 @@
             }
         });
 
+        // 表单提交
+        uploadForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(uploadForm);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showModal('上传成功', result.message, 'success');
+                    resetUpload();
+                    uploadForm.reset();
+                } else {
+                    showModal('上传失败', result.message, 'error');
+                }
+            } catch (error) {
+                showModal('错误', '上传过程中发生错误: ' + error.message, 'error');
+            }
+        });
+
+        // 关闭弹窗
+        modalCloseBtn.addEventListener('click', function () {
+            modal.style.display = 'none';
+        });
+
+        // 点击弹窗外部关闭
+        window.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
         // 重置上传状态
         function resetUpload() {
-            dropzone.style.display = 'block'; // 显示虚线框
-            deleteBtn.style.display = 'none'; // 隐藏删除按钮
-            fileInfo.style.display = 'none';  // 隐藏文件信息
+            dropzone.style.display = 'block';
+            deleteBtn.style.display = 'none';
+            fileInfo.style.display = 'none';
         }
 
         // 格式化文件大小
@@ -323,6 +420,32 @@
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
+
+        // 显示弹窗
+        function showModal(title, message, type) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+
+            if (type === 'success') {
+                modalTitle.className = 'success';
+                modalMessage.className = 'success';
+            } else if (type === 'error') {
+                modalTitle.className = 'error';
+                modalMessage.className = 'error';
+            }
+
+            modal.style.display = 'block';
+        }
+
+        // 检查URL参数显示上传成功消息
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('uploaded') === 'true') {
+                showModal('上传成功', '文件上传成功！', 'success');
+                // 清除URL参数
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
     </script>
 </body>
 

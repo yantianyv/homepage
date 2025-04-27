@@ -373,6 +373,122 @@
                 font-size: 1.1rem;
             }
         }
+
+        /* 临时文件卡片专用样式 - 优化配色版 */
+        .temp-file-card {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            border-top: 4px solid var(--primary-color, #4CAF50);
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .temp-file-card .file-header {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem 1.5rem 0.5rem;
+            background-color: white;
+        }
+
+        .temp-file-card .file-icon {
+            font-size: 2rem;
+            color: var(--primary-color, #4CAF50);
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .temp-file-card .file-title {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .temp-file-card .file-title h3 {
+            margin: 0 0 0.5rem 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #333;
+        }
+
+        .temp-file-card .file-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .temp-file-card .file-content {
+            padding: 1rem 1.5rem;
+            flex-grow: 1;
+            border-bottom: 1px solid #f0f0f0;
+            background-color: #fafafa;
+        }
+
+        .temp-file-card .file-description {
+            color: #555;
+            margin: 0;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .temp-file-card .file-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background-color: white;
+        }
+
+        .temp-file-card .file-size {
+            font-size: 0.9rem;
+            color: #777;
+        }
+
+        .temp-file-card .download-btn {
+            margin: 0;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.9rem;
+            background-color: var(--primary-color, #4CAF50);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .temp-file-card .download-btn:hover {
+            background-color: var(--primary-dark, #3d8b40);
+        }
+
+        /* 悬停效果 */
+        .temp-file-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        @media (max-width: 768px) {
+            .temp-file-card .file-meta {
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+
+            .temp-file-card .file-footer {
+                flex-direction: column;
+                gap: 0.8rem;
+                align-items: flex-start;
+            }
+
+            .temp-file-card .download-btn {
+                align-self: flex-end;
+            }
+        }
     </style>
 </head>
 
@@ -418,25 +534,28 @@
             </div>
             <div class="grid">
                 {% for file in temp_files %}
-                <div class="card" data-name="{{ file.name }}">
-                    <div class="file-icon">
-                        <i class="fas fa-{{ file.icon }}"></i>
-                    </div>
-                    <div class="file-info">
-                        <h3>{{ file.name }}</h3>
-                        <p class="file-description">{{ file.description }}</p>
-                        <div class="file-meta">
-                            <p><i class="fas fa-user"></i> {{ file.uploader_ip }}</p>
-                            <p><i class="fas fa-laptop"></i> {{ file.uploader_device }}</p>
+                <div class="card temp-file-card" data-name="{{ file.name }}">
+                    <div class="file-header">
+                        <div class="file-icon">
+                            <i class="fas fa-{{ file.icon }}"></i>
+                        </div>
+                        <div class="file-title">
+                            <h3>{{ file.name }}</h3>
+                            <div class="file-meta">
+                                <span><i class="fas fa-user"></i> {{ file.uploader_ip }}</span>
+                                <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="file-meta">
-                        <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
-                        <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+                    <div class="file-content">
+                        <p class="file-description">{{ file.description }}</p>
                     </div>
-                    <a href="/download/{{ file.filename }}" class="btn">
-                        <i class="fas fa-download"></i> 下载
-                    </a>
+                    <div class="file-footer">
+                        <span class="file-size"><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
+                        <a href="/download/{{ file.filename }}" class="btn download-btn">
+                            <i class="fas fa-download"></i> 下载
+                        </a>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -582,14 +701,6 @@
             element.classList.toggle('collapsed');
             categoryFiles.classList.toggle('collapsed');
         }
-
-        // // 页面加载时默认展开第一个分类
-        // document.addEventListener('DOMContentLoaded', function () {
-        //     const firstCategory = document.querySelector('.category-title');
-        //     if (firstCategory) {
-        //         toggleCategory(firstCategory);
-        //     }
-        // });
 
         // 获取当前年份
         document.addEventListener('DOMContentLoaded', function () {

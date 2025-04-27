@@ -1,6 +1,6 @@
 import json
 import os
-from flask import Flask, render_template, redirect, send_from_directory, request, flash, url_for
+from flask import Flask, get_flashed_messages, jsonify, render_template, redirect, send_from_directory, request, flash, url_for
 from pathlib import Path
 from datetime import datetime, timedelta
 import set_cfg
@@ -79,6 +79,7 @@ def get_temp_files():
             desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
             description = "临时文件"
             uploader_info = {}
+            original_filename = filename  # 保持原始文件名
 
             if os.path.exists(desc_file):
                 try:
@@ -86,12 +87,13 @@ def get_temp_files():
                         data = json.load(f)
                         description = data.get("description", description)
                         uploader_info = data.get("uploader", {})
+                        original_filename = data.get("original_filename", filename)  # 获取原始文件名
                 except:
                     pass
 
             files.append(
                 {
-                    "name": filename,
+                    "name": original_filename,  # 显示原始文件名
                     "filename": f"tempfiles/{filename}",
                     "size": stat.st_size,
                     "formatted_size": format_size(stat.st_size),
@@ -230,43 +232,43 @@ def upload_file():
     if request.method == "POST":
         # 检查是否有文件
         if "file" not in request.files:
-            flash("没有选择文件", "error")
-            return redirect(request.url)
+            return jsonify({"success": False, "message": "没有选择文件"}), 400
 
         file = request.files["file"]
         if file.filename == "":
-            flash("没有选择文件", "error")
-            return redirect(request.url)
+            return jsonify({"success": False, "message": "没有选择文件"}), 400
 
         if file:
-            # 安全处理文件名
-            filename = secure_filename(file.filename)
-            # 添加随机前缀避免冲突
-            unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
-            filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
-
             try:
+                # 安全处理文件名
+                filename = secure_filename(file.filename)
+                original_filename = file.filename  # 保存原始文件名
+                # 添加随机前缀避免冲突
+                unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
+                filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+
                 file.save(filepath)
 
+                # 获取描述信息，如果为空则使用默认值
+                description = request.form.get("description", "").strip()
+                if not description:
+                    description = "上传者没有提供描述信息"
+
                 # 保存描述和上传者信息
-                desc_data = {"description": request.form.get("description", "临时文件"), "uploader": get_client_info(), "upload_time": datetime.now().isoformat()}
+                desc_data = {"description": description, "uploader": get_client_info(), "upload_time": datetime.now().isoformat(), "original_filename": original_filename}
 
                 with open(os.path.join(UPLOAD_FOLDER, f".{unique_filename}.json"), "w", encoding="utf-8") as f:
                     json.dump(desc_data, f, ensure_ascii=False, indent=2)
 
-                # 上传成功后跳转到 /upload?uploaded=true
-                return redirect(url_for("upload_file", uploaded="true"))
+                return jsonify({"success": True, "message": "文件上传成功！"})
             except Exception as e:
                 app.logger.error(f"Error uploading file: {e}")
-                flash("文件上传失败", "error")
-                return redirect(request.url)
+                return jsonify({"success": False, "message": "文件上传失败"}), 500
         else:
-            flash("不允许的文件类型", "error")
-            return redirect(request.url)
+            return jsonify({"success": False, "message": "不允许的文件类型"}), 400
 
-    # 判断是否有 uploaded 参数
-    uploaded = request.args.get("uploaded")
-    return render_template("upload.html", site_title=config_data.get("site_title", "服务导航中心"), uploaded=uploaded)
+    # GET请求处理
+    return render_template("upload.html", site_title=config_data.get("site_title", "服务导航中心"))
 
 
 @app.route("/")
@@ -287,7 +289,15 @@ def redirect_to_service(service):
 @app.route("/download/<path:filename>")
 def download_file(filename):
     try:
-        return send_from_directory(os.path.join(app.root_path, "static/files"), filename, as_attachment=True)
+        # 获取原始文件名
+        desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
+        original_filename = filename
+        if os.path.exists(desc_file):
+            with open(desc_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                original_filename = data.get("original_filename", filename)
+
+        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True, download_name=original_filename)  # 设置下载文件名为原始文件名
     except FileNotFoundError:
         return "文件不存在", 404
 
@@ -295,7 +305,15 @@ def download_file(filename):
 @app.route("/download/tempfiles/<filename>")
 def download_tempfile(filename):
     try:
-        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+        # 获取原始文件名
+        desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
+        original_filename = filename
+        if os.path.exists(desc_file):
+            with open(desc_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                original_filename = data.get("original_filename", filename)
+
+        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True, download_name=original_filename)  # 设置下载文件名为原始文件名
     except FileNotFoundError:
         return "文件不存在", 404
 
