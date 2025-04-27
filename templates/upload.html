@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
@@ -394,15 +395,36 @@
             dropzone.classList.remove('hover');
         });
 
+        // 修改现有的drop事件处理
         dropzone.addEventListener('drop', function (e) {
             e.preventDefault();
             dropzone.classList.remove('hover');
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                fileInput.files = e.dataTransfer.files;
-                const event = new Event('change');
-                fileInput.dispatchEvent(event);
+
+            const files = e.dataTransfer.files;
+
+            // 检查是否拖拽了多个文件
+            if (files.length > 1) {
+                showModal('上传失败', '只能上传单个文件，不支持多个文件同时上传', 'error');
+                return;
             }
+
+            // 检查是否拖拽了文件夹
+            const file = files[0];
+            if (file.size === 0 && file.type === "") {
+                showModal('上传失败', '不支持上传文件夹，请选择具体文件', 'error');
+                return;
+            }
+
+            // 检查文件大小限制（可选）
+            const maxSize = 100 * 1024 * 1024; // 100MB
+            if (file.size > maxSize) {
+                showModal('上传失败', `文件大小不能超过 ${formatFileSize(maxSize)}`, 'error');
+                return;
+            }
+
+            fileInput.files = files;
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
         });
 
         // 表单提交
