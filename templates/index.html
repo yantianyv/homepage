@@ -408,9 +408,58 @@
             </div>
         </section>
 
+        {% if temp_files %}
         <section>
             <div class="section-header">
-                <h2><i class="fas fa-file-download"></i> 文件下载</h2>
+                <h2><i class="fas fa-clock"></i> 临时文件 (24小时后自动删除)</h2>
+                <a href="/upload" class="btn" style="margin: 0;">
+                    <i class="fas fa-upload"></i> 上传文件
+                </a>
+            </div>
+            <div class="grid">
+                {% for file in temp_files %}
+                <div class="card" data-name="{{ file.name }}">
+                    <div class="file-icon">
+                        <i class="fas fa-{{ file.icon }}"></i>
+                    </div>
+                    <div class="file-info">
+                        <h3>{{ file.name }}</h3>
+                        <p class="file-description">{{ file.description }}</p>
+                        <div class="file-meta">
+                            <p><i class="fas fa-user"></i> {{ file.uploader_ip }}</p>
+                            <p><i class="fas fa-laptop"></i> {{ file.uploader_device }}</p>
+                        </div>
+                    </div>
+                    <div class="file-meta">
+                        <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
+                        <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+                    </div>
+                    <a href="/download/{{ file.filename }}" class="btn">
+                        <i class="fas fa-download"></i> 下载
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% else %}
+        <section>
+            <div class="section-header">
+                <h2><i class="fas fa-clock"></i> 临时文件</h2>
+                <a href="/upload" class="btn" style="margin: 0;">
+                    <i class="fas fa-upload"></i> 上传文件
+                </a>
+            </div>
+            <div class="empty-state">
+                <i class="fas fa-upload"></i>
+                <h3>暂无临时文件</h3>
+                <p>您可以上传将在24小时后自动删除的临时文件</p>
+            </div>
+        </section>
+        {% endif %}
+
+        <section>
+            <div class="section-header">
+                <h2><i class="fas fa-file-download"></i> 资源下载</h2>
                 <input type="text" class="search-box" placeholder="搜索文件..." id="search">
             </div>
 

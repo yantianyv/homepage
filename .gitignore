@@ -1,5 +1,9 @@
 config.json
 static/files/*
+static/tempfiles/*
+README.html
+
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -175,4 +179,3 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-README.html

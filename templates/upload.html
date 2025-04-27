@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上传文件 - {{ site_title }}</title>
+    <link rel="stylesheet" href="/static/fontawesome-free-6.7.2-web/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary-color: #689f38;
+            --light-color: #9bcb91;
+            --dark-color: #263238;
+            --text-color: #424242;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .upload-box {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        input[type="file"] {
+            padding: 0.5rem;
+            display: none;
+            /* 隐藏浏览按钮 */
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            font-size: 1.1rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn i {
+            margin-right: 0.5rem;
+        }
+
+        .delete-btn {
+            background: #e57373;
+            color: white;
+            padding: 0.7rem 1rem;
+            border-radius: var(--border-radius);
+            width: 100%;
+            margin-top: 1rem;
+            transition: var(--transition);
+        }
+
+        .delete-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: var(--border-radius);
+            display: none;
+        }
+
+        .flash-messages {
+            margin-bottom: 1.5rem;
+        }
+
+        .flash-message {
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .flash-error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .flash-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .requirements {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .requirements ul {
+            margin-top: 0.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .dropzone {
+            display: block;
+            width: 100%;
+            border: 2px dashed var(--secondary-color);
+            border-radius: var(--border-radius);
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--secondary-color);
+            background: #f9f9f9;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .dropzone.hover {
+            background: #e8f5e9;
+            border-color: var(--primary-light);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="upload-box">
+            <h1><i class="fas fa-upload"></i> 上传临时文件</h1>
+
+            <div class="flash-messages">
+                {% if uploaded == 'true' %}
+                <div class="flash-message flash-success">文件上传成功！</div>
+                {% endif %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="file" class="dropzone" id="dropzone">
+                        <i class="fas fa-cloud-upload-alt"></i><br>
+                        点击或拖拽文件到这里上传
+                    </label>
+                    <input type="file" name="file" id="file" required>
+                    <button type="button" class="btn delete-btn" id="delete-btn" style="display: none;">
+                        <i class="fas fa-trash"></i> 删除文件
+                    </button>
+                    <div class="file-info" id="file-info">
+                        <strong>文件名:</strong> <span id="file-name"></span><br>
+                        <strong>大小:</strong> <span id="file-size"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">文件描述 (可选)</label>
+                    <textarea name="description" id="description" placeholder="请输入文件描述..."></textarea>
+                </div>
+
+                <button type="submit" class="btn"><i class="fas fa-upload"></i> 上传文件</button>
+            </form>
+
+            <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> 返回首页</a>
+
+            <div class="requirements">
+                <strong>上传说明:</strong>
+                <ul>
+                    <li>文件将在24小时后自动删除</li>
+                    <li>系统会记录上传者IP和设备信息</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file');
+        const dropzone = document.getElementById('dropzone');
+        const deleteBtn = document.getElementById('delete-btn');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+
+        // 文件选中后
+        fileInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                dropzone.style.display = 'none'; // 隐藏虚线框
+                deleteBtn.style.display = 'inline-block'; // 显示删除按钮
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.style.display = 'block';
+            } else {
+                resetUpload();
+            }
+        });
+
+        // 点击删除按钮
+        deleteBtn.addEventListener('click', function () {
+            fileInput.value = ''; // 清空input
+            resetUpload();
+        });
+
+        // 拖拽到虚线框时
+        dropzone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropzone.classList.add('hover');
+        });
+
+        dropzone.addEventListener('dragleave', function () {
+            dropzone.classList.remove('hover');
+        });
+
+        dropzone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropzone.classList.remove('hover');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                fileInput.files = e.dataTransfer.files;
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        });
+
+        // 重置上传状态
+        function resetUpload() {
+            dropzone.style.display = 'block'; // 显示虚线框
+            deleteBtn.style.display = 'none'; // 隐藏删除按钮
+            fileInfo.style.display = 'none';  // 隐藏文件信息
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+
+</html>

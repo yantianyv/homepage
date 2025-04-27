@@ -1,12 +1,15 @@
 import json
 import os
-from flask import Flask, render_template, redirect, send_from_directory
+from flask import Flask, render_template, redirect, send_from_directory, request, flash, url_for
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 import set_cfg
-
+from werkzeug.utils import secure_filename
+import uuid
+import platform
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # 用于flash消息
 
 
 # 添加 now 函数到模板全局变量
@@ -21,16 +24,93 @@ try:
         config_data = json.load(f)
 except:
     set_cfg.main_menu()
+
 # 获取域名配置
 domain = config_data["domain"]
 
+# 配置上传
+UPLOAD_FOLDER = os.path.join(app.root_path, "static", "tempfiles")
+ALLOWED_EXTENSIONS = {"txt", "pdf", "png", "jpg", "jpeg", "gif", "zip", "rar", "7z", "doc", "docx", "xls", "xlsx", "ppt", "pptx"}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-from pathlib import Path
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def get_client_info():
+    """获取客户端信息"""
+    ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+    user_agent = request.headers.get("User-Agent", "Unknown")
+    system = platform.system()
+    return {"ip": ip.split(",")[0].strip() if ip else "Unknown", "device": f"{system} - {user_agent.split('(')[1].split(')')[0]}" if "(" in user_agent else user_agent}
+
+
+def cleanup_tempfiles():
+    """清理超过24小时的临时文件"""
+    now = datetime.now()
+    for filename in os.listdir(UPLOAD_FOLDER):
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.isfile(filepath):
+            stat = os.stat(filepath)
+            file_time = datetime.fromtimestamp(stat.st_mtime)
+            if (now - file_time) > timedelta(hours=24):
+                try:
+                    os.remove(filepath)
+                    # 同时删除对应的描述文件
+                    desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
+                    if os.path.exists(desc_file):
+                        os.remove(desc_file)
+                except Exception as e:
+                    app.logger.error(f"Error deleting temp file {filename}: {e}")
+
+
+def get_temp_files():
+    """获取临时文件列表"""
+    cleanup_tempfiles()  # 先清理过期文件
+    files = []
+
+    for filename in os.listdir(UPLOAD_FOLDER):
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.isfile(filepath) and not (filename.endswith(".json") and filename.startswith(".")):
+            stat = os.stat(filepath)
+
+            # 读取描述和上传者信息
+            desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
+            description = "临时文件"
+            uploader_info = {}
+
+            if os.path.exists(desc_file):
+                try:
+                    with open(desc_file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        description = data.get("description", description)
+                        uploader_info = data.get("uploader", {})
+                except:
+                    pass
+
+            files.append(
+                {
+                    "name": filename,
+                    "filename": f"tempfiles/{filename}",
+                    "size": stat.st_size,
+                    "formatted_size": format_size(stat.st_size),
+                    "icon": get_file_icon(filename),
+                    "upload_time": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M"),
+                    "description": description,
+                    "is_temp": True,
+                    "uploader_ip": uploader_info.get("ip", "Unknown"),
+                    "uploader_device": uploader_info.get("device", "Unknown"),
+                }
+            )
+
+    # 按上传时间倒序排序
+    files.sort(key=lambda x: x["upload_time"], reverse=True)
+    return files
 
 
 def get_file_icon(filename):
     # 定义不同图标对应的后缀列表
-    # fmt: off
     icon_groups = {
         # 压缩包
         "file-zipper": [".zip", ".rar", ".7z"],
@@ -43,18 +123,17 @@ def get_file_icon(filename):
         "file-lines": [".txt"],
         "book": [".md"],
         # 媒体
-        "file-image": [".jpg", ".jpeg", ".png", ".gif"],
+        "file-image": [".jpg", ".jpeg", ".png", ".gif", "bmp", ""],
         "file-audio": [".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac"],
         "file-video": [".mp4", ".avi", ".mkv", ".mov", ".flv", ".wmv", ".webm", ".3gp", ".mpg", ".mpeg", ".m4v", ".rmvb", ".rm"],
-        #可执行文件
-        "cubes": [".exe", ".bin", ".jar"],
+        # 可执行文件
+        "cube": [".exe", ".bin", ".jar"],
         # 代码
         "file-code": [".py", ".c", ".cpp", ".java", ".html", ".css", ".js", ".json", ".xml", ".go", ".rs", ".swift", ".kt", ".rb", ".php"],
-        "terminal":[".sh",".bat"],
+        "terminal": [".sh", ".bat"],
         # 数据库
-        "database": [".db", ".sql", ".sqlite"],
+        "database": [".accdb", ".db", ".sql", ".sqlite"],
     }
-    # fmt: on
     extension = Path(filename).suffix.lower()
 
     # 遍历分组，查找对应图标
@@ -64,7 +143,6 @@ def get_file_icon(filename):
     return "file"  # 默认图标
 
 
-# 格式化文件大小
 def format_size(size):
     for unit in ["B", "KB", "MB", "GB"]:
         if size < 1024:
@@ -73,7 +151,6 @@ def format_size(size):
     return f"{size:.1f} TB"
 
 
-# 获取可下载文件列表
 def get_downloadable_files():
     # 读取自定义描述
     desc_file = os.path.join(app.root_path, "static/files/descriptions.json")
@@ -148,18 +225,55 @@ def get_downloadable_files():
     return categories
 
 
-# 首页路由
+@app.route("/upload", methods=["GET", "POST"])
+def upload_file():
+    if request.method == "POST":
+        # 检查是否有文件
+        if "file" not in request.files:
+            flash("没有选择文件", "error")
+            return redirect(request.url)
+
+        file = request.files["file"]
+        if file.filename == "":
+            flash("没有选择文件", "error")
+            return redirect(request.url)
+
+        if file:
+            # 安全处理文件名
+            filename = secure_filename(file.filename)
+            # 添加随机前缀避免冲突
+            unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
+            filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+
+            try:
+                file.save(filepath)
+
+                # 保存描述和上传者信息
+                desc_data = {"description": request.form.get("description", "临时文件"), "uploader": get_client_info(), "upload_time": datetime.now().isoformat()}
+
+                with open(os.path.join(UPLOAD_FOLDER, f".{unique_filename}.json"), "w", encoding="utf-8") as f:
+                    json.dump(desc_data, f, ensure_ascii=False, indent=2)
+
+                # 上传成功后跳转到 /upload?uploaded=true
+                return redirect(url_for("upload_file", uploaded="true"))
+            except Exception as e:
+                app.logger.error(f"Error uploading file: {e}")
+                flash("文件上传失败", "error")
+                return redirect(request.url)
+        else:
+            flash("不允许的文件类型", "error")
+            return redirect(request.url)
+
+    # 判断是否有 uploaded 参数
+    uploaded = request.args.get("uploaded")
+    return render_template("upload.html", site_title=config_data.get("site_title", "服务导航中心"), uploaded=uploaded)
+
+
 @app.route("/")
 def index():
-    return render_template(
-        "index.html",
-        services=config_data["services"],
-        downloads=get_downloadable_files(),
-        site_title=config_data.get("site_title", "服务导航中心"),
-    )
+    return render_template("index.html", services=config_data["services"], downloads=get_downloadable_files(), temp_files=get_temp_files(), site_title=config_data.get("site_title", "服务导航中心"), show_upload=True)
 
 
-# 动态跳转路由
 @app.route("/<service>")
 def redirect_to_service(service):
     if service in config_data["services"]:
@@ -170,11 +284,18 @@ def redirect_to_service(service):
         return "服务未找到", 404
 
 
-# 文件下载路由
 @app.route("/download/<path:filename>")
 def download_file(filename):
     try:
         return send_from_directory(os.path.join(app.root_path, "static/files"), filename, as_attachment=True)
+    except FileNotFoundError:
+        return "文件不存在", 404
+
+
+@app.route("/download/tempfiles/<filename>")
+def download_tempfile(filename):
+    try:
+        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
     except FileNotFoundError:
         return "文件不存在", 404
 
