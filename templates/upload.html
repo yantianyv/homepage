@@ -252,6 +252,39 @@
         .error {
             color: #c62828;
         }
+
+        /* 进度条样式 */
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary-light);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .uploading .btn {
+            display: none;
+        }
+
+        .uploading .progress-container {
+            display: block;
+        }
     </style>
 </head>
 
@@ -284,6 +317,9 @@
                 </div>
 
                 <button type="submit" class="btn"><i class="fas fa-upload"></i> 上传文件</button>
+                <div class="progress-container" id="progress-container">
+                    <div class="progress-bar" id="progress-bar">0%</div>
+                </div>
             </form>
 
             <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> 返回首页</a>
@@ -325,6 +361,8 @@
         const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
         const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
 
         // 文件选中后
         fileInput.addEventListener('change', function (e) {
@@ -372,24 +410,62 @@
             e.preventDefault();
 
             const formData = new FormData(uploadForm);
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showModal('上传失败', '请先选择要上传的文件', 'error');
+                return;
+            }
+
+            // 显示进度条
+            uploadForm.classList.add('uploading');
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
 
             try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
+                const xhr = new XMLHttpRequest();
+
+                xhr.upload.addEventListener('progress', function (e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = Math.round((e.loaded / e.total) * 99);
+                        progressBar.style.width = percentComplete + '%';
+                        progressBar.textContent = percentComplete + '%';
+                    }
                 });
 
-                const result = await response.json();
+                xhr.addEventListener('load', function () {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        if (result.success) {
+                            showModal('上传成功', result.message, 'success');
+                            resetUpload();
+                            uploadForm.reset();
+                        } else {
+                            showModal('上传失败', result.message, 'error');
+                        }
+                    } catch (error) {
+                        showModal('错误', '解析服务器响应时出错: ' + error.message, 'error');
+                    } finally {
+                        uploadForm.classList.remove('uploading');
+                    }
+                });
 
-                if (result.success) {
-                    showModal('上传成功', result.message, 'success');
-                    resetUpload();
-                    uploadForm.reset();
-                } else {
-                    showModal('上传失败', result.message, 'error');
-                }
+                xhr.addEventListener('error', function () {
+                    showModal('错误', '上传过程中发生网络错误', 'error');
+                    uploadForm.classList.remove('uploading');
+                });
+
+                xhr.addEventListener('abort', function () {
+                    showModal('取消', '上传已被取消', 'error');
+                    uploadForm.classList.remove('uploading');
+                });
+
+                xhr.open('POST', '/upload');
+                xhr.send(formData);
+
             } catch (error) {
                 showModal('错误', '上传过程中发生错误: ' + error.message, 'error');
+                uploadForm.classList.remove('uploading');
             }
         });
 
@@ -410,6 +486,7 @@
             dropzone.style.display = 'block';
             deleteBtn.style.display = 'none';
             fileInfo.style.display = 'none';
+            uploadForm.classList.remove('uploading');
         }
 
         // 格式化文件大小
