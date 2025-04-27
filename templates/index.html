@@ -426,6 +426,7 @@
             flex-grow: 1;
             border-bottom: 1px solid #f0f0f0;
             background-color: #fafafa;
+            position: relative;
         }
 
         .temp-file-card .file-description {
@@ -433,9 +434,35 @@
             margin: 0;
             line-height: 1.5;
             display: -webkit-box;
-            -webkit-line-clamp: 3;
+            -webkit-line-clamp: 2;
+            /* 限制显示2行 */
             -webkit-box-orient: vertical;
             overflow: hidden;
+            max-height: 3em;
+            /* 2行高度 */
+            transition: max-height 0.3s ease;
+        }
+
+        .temp-file-card .file-description.expanded {
+            -webkit-line-clamp: unset;
+            max-height: none;
+        }
+
+        .temp-file-card .read-more {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(to right, transparent, #fafafa 50%);
+            padding: 0 1.5rem 0 2rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: none;
+            /* 默认隐藏 */
+        }
+
+        .temp-file-card .read-more:hover {
+            text-decoration: underline;
         }
 
         .temp-file-card .file-footer {
@@ -473,6 +500,35 @@
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
 
+        /* 新增样式：临时文件折叠控制 */
+        .temp-files-container {
+            position: relative;
+        }
+
+        .temp-files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .temp-files-grid.collapsed {
+            max-height: 600px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .temp-files-grid.collapsed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, rgba(245, 245, 245, 0.9));
+            pointer-events: none;
+        }
+
         @media (max-width: 768px) {
             .temp-file-card .file-meta {
                 flex-direction: column;
@@ -487,6 +543,10 @@
 
             .temp-file-card .download-btn {
                 align-self: flex-end;
+            }
+
+            .temp-files-grid.collapsed {
+                max-height: 800px;
             }
         }
     </style>
@@ -528,36 +588,42 @@
         <section>
             <div class="section-header">
                 <h2><i class="fas fa-clock"></i> 临时文件 (24小时后自动删除)</h2>
-                <a href="/upload" class="btn" style="margin: 0;">
-                    <i class="fas fa-upload"></i> 上传文件
-                </a>
+                <div>
+                    <a href="/upload" class="btn" style="margin: 0 0.5rem 0 0;">
+                        <i class="fas fa-upload"></i> 上传文件
+                    </a>
+
+                </div>
             </div>
-            <div class="grid">
-                {% for file in temp_files %}
-                <div class="card temp-file-card" data-name="{{ file.name }}">
-                    <div class="file-header">
-                        <div class="file-icon">
-                            <i class="fas fa-{{ file.icon }}"></i>
-                        </div>
-                        <div class="file-title">
-                            <h3>{{ file.name }}</h3>
-                            <div class="file-meta">
-                                <span><i class="fas fa-user"></i> {{ file.uploader_ip }}</span>
-                                <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+            <div class="temp-files-container">
+                <div class="temp-files-grid {% if temp_files|length > 6 %}collapsed{% endif %}" id="temp-files-grid">
+                    {% for file in temp_files %}
+                    <div class="card temp-file-card" data-name="{{ file.name }}">
+                        <div class="file-header">
+                            <div class="file-icon">
+                                <i class="fas fa-{{ file.icon }}"></i>
+                            </div>
+                            <div class="file-title">
+                                <h3>{{ file.name }}</h3>
+                                <div class="file-meta">
+                                    <span><i class="fas fa-user"></i> {{ file.uploader_ip }}</span>
+                                    <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+                                </div>
                             </div>
                         </div>
+                        <div class="file-content">
+                            <p class="file-description">{{ file.description }}</p>
+                            <span class="read-more">显示更多</span>
+                        </div>
+                        <div class="file-footer">
+                            <span class="file-size"><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
+                            <a href="/download/{{ file.filename }}" class="btn download-btn">
+                                <i class="fas fa-download"></i> 下载
+                            </a>
+                        </div>
                     </div>
-                    <div class="file-content">
-                        <p class="file-description">{{ file.description }}</p>
-                    </div>
-                    <div class="file-footer">
-                        <span class="file-size"><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
-                        <a href="/download/{{ file.filename }}" class="btn download-btn">
-                            <i class="fas fa-download"></i> 下载
-                        </a>
-                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </section>
         {% else %}
@@ -575,7 +641,12 @@
             </div>
         </section>
         {% endif %}
-
+        <div style="text-align: center; margin-top: 1rem;">
+            <button class="btn" id="toggle-temp-files"
+                style="background: transparent; color: var(--primary-color); margin: 0;">
+                <i class="fas fa-chevron-down"></i> 显示全部
+            </button>
+        </div>
         <section>
             <div class="section-header">
                 <h2><i class="fas fa-file-download"></i> 资源下载</h2>
@@ -702,12 +773,46 @@
             categoryFiles.classList.toggle('collapsed');
         }
 
-        // 获取当前年份
+        // 临时文件折叠功能
         document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggle-temp-files');
+            if (toggleBtn) {
+                const tempFilesGrid = document.getElementById('temp-files-grid');
+
+                toggleBtn.addEventListener('click', function () {
+                    tempFilesGrid.classList.toggle('collapsed');
+
+                    if (tempFilesGrid.classList.contains('collapsed')) {
+                        toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i> 显示全部';
+                    } else {
+                        toggleBtn.innerHTML = '<i class="fas fa-chevron-up"></i> 收起';
+                    }
+                });
+            }
+
+            // 获取当前年份
             const yearElement = document.querySelector('footer p');
             if (yearElement) {
                 yearElement.textContent = yearElement.textContent.replace('{{ now().year }}', new Date().getFullYear());
             }
+
+            // 临时文件描述折叠功能
+            document.querySelectorAll('.temp-file-card .file-description').forEach(desc => {
+                const content = desc.textContent;
+                const lineHeight = parseInt(window.getComputedStyle(desc).lineHeight);
+                const maxHeight = lineHeight * 2; // 2行高度
+
+                // 检查内容是否超过2行
+                if (desc.scrollHeight > maxHeight) {
+                    const readMore = desc.nextElementSibling;
+                    readMore.style.display = 'block';
+
+                    readMore.addEventListener('click', function () {
+                        desc.classList.toggle('expanded');
+                        readMore.textContent = desc.classList.contains('expanded') ? '收起' : '显示更多';
+                    });
+                }
+            });
         });
     </script>
 </body>
