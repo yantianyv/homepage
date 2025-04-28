@@ -415,13 +415,6 @@
                 return;
             }
 
-            // 检查文件大小限制（可选）
-            const maxSize = 100 * 1024 * 1024 * 1024; // 100GB
-            if (file.size > maxSize) {
-                showModal('上传失败', `文件大小不能超过 ${formatFileSize(maxSize)}`, 'error');
-                return;
-            }
-
             fileInput.files = files;
             const event = new Event('change');
             fileInput.dispatchEvent(event);
