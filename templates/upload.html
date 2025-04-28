@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
@@ -254,15 +253,46 @@
             color: #c62828;
         }
 
-        /* 进度条样式 */
+        /* 文件列表样式 */
+        .file-list {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .file-item {
+            background: #f9f9f9;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-name {
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
         .progress-container {
             width: 100%;
             height: 20px;
             background: #e0e0e0;
             border-radius: var(--border-radius);
-            margin-top: 1rem;
+            margin-top: 0.5rem;
             overflow: hidden;
-            display: none;
         }
 
         .progress-bar {
@@ -273,18 +303,37 @@
             border-radius: var(--border-radius);
             display: flex;
             align-items: center;
-            justify-content: flex-end; /* 修改此处为右对齐 */
+            justify-content: flex-end;
             color: white;
             font-size: 12px;
             font-weight: bold;
         }
 
-        .uploading .btn {
-            display: none;
+        .status {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
-        .uploading .progress-container {
-            display: block;
+        .status.uploading {
+            color: var(--primary-color);
+        }
+
+        .status.success {
+            color: #2e7d32;
+        }
+
+        .status.error {
+            color: #c62828;
+        }
+
+        .upload-summary {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: #f5f5f5;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            display: none;
         }
     </style>
 </head>
@@ -298,17 +347,12 @@
                 <div class="form-group">
                     <label for="file" class="dropzone" id="dropzone">
                         <i class="fas fa-cloud-upload-alt"></i><br>
-                        点击或拖拽文件到这里上传
+                        点击或拖拽文件到这里上传 (支持多选)
                     </label>
-                    <input type="file" name="file" id="file" required>
+                    <input type="file" name="file" id="file" required multiple>
 
-                    <div class="file-info" id="file-info">
-                        <strong>文件名:</strong> <span id="file-name"></span><br>
-                        <strong>大小:</strong> <span id="file-size"></span><br>
-                        <button type="button" class="btn delete-btn" id="delete-btn"
-                            style="display: none; width: auto;">
-                            <i class="fas fa-trash"></i>&nbsp; 重新选择
-                        </button>
+                    <div class="file-list" id="file-list">
+                        <!-- 文件列表将在这里动态生成 -->
                     </div>
                 </div>
 
@@ -318,8 +362,9 @@
                 </div>
 
                 <button type="submit" class="btn"><i class="fas fa-upload"></i> 上传文件</button>
-                <div class="progress-container" id="progress-container">
-                    <div class="progress-bar" id="progress-bar">0%</div>
+
+                <div class="upload-summary" id="upload-summary">
+                    <span id="upload-count">0</span> 个文件正在上传，已完成 <span id="completed-count">0</span> 个
                 </div>
             </form>
 
@@ -330,6 +375,7 @@
                 <ul>
                     <li>文件将在24小时后自动删除</li>
                     <li>系统会记录上传者IP和设备信息</li>
+                    <li>支持同时上传多个文件</li>
                 </ul>
             </div>
         </div>
@@ -353,37 +399,55 @@
     <script>
         const fileInput = document.getElementById('file');
         const dropzone = document.getElementById('dropzone');
-        const deleteBtn = document.getElementById('delete-btn');
-        const fileInfo = document.getElementById('file-info');
-        const fileName = document.getElementById('file-name');
-        const fileSize = document.getElementById('file-size');
+        const fileList = document.getElementById('file-list');
         const uploadForm = document.getElementById('uploadForm');
         const modal = document.getElementById('messageModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
         const modalCloseBtn = document.getElementById('modalCloseBtn');
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('progress-bar');
+        const uploadSummary = document.getElementById('upload-summary');
+        const uploadCount = document.getElementById('upload-count');
+        const completedCount = document.getElementById('completed-count');
+
+        // 存储上传状态
+        let uploads = [];
+        let completedUploads = 0;
 
         // 文件选中后
         fileInput.addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            if (file) {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
                 dropzone.style.display = 'none';
-                deleteBtn.style.display = 'inline-block';
-                fileName.textContent = file.name;
-                fileSize.textContent = formatFileSize(file.size);
-                fileInfo.style.display = 'block';
+                renderFileList(files);
+                fileList.style.display = 'block';
             } else {
                 resetUpload();
             }
         });
 
-        // 点击删除按钮
-        deleteBtn.addEventListener('click', function () {
-            fileInput.value = '';
-            resetUpload();
-        });
+        // 渲染文件列表
+        function renderFileList(files) {
+            fileList.innerHTML = '';
+
+            files.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.dataset.index = index;
+
+                fileItem.innerHTML = `
+                    <div class="file-header">
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">${formatFileSize(file.size)}</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-${index}">0%</div>
+                    </div>
+                    <div class="status" id="status-${index}">等待上传</div>
+                `;
+
+                fileList.appendChild(fileItem);
+            });
+        }
 
         // 拖拽到虚线框时
         dropzone.addEventListener('dragover', function (e) {
@@ -395,22 +459,15 @@
             dropzone.classList.remove('hover');
         });
 
-        // 修改现有的drop事件处理
         dropzone.addEventListener('drop', function (e) {
             e.preventDefault();
             dropzone.classList.remove('hover');
 
             const files = e.dataTransfer.files;
 
-            // 检查是否拖拽了多个文件
-            if (files.length > 1) {
-                showModal('上传失败', '只能上传单个文件，不支持多个文件同时上传', 'error');
-                return;
-            }
-
             // 检查是否拖拽了文件夹
-            const file = files[0];
-            if (file.size === 0 && file.type === "") {
+            const hasFolder = Array.from(files).some(file => file.size === 0 && file.type === "");
+            if (hasFolder) {
                 showModal('上传失败', '不支持上传文件夹，请选择具体文件', 'error');
                 return;
             }
@@ -424,65 +481,136 @@
         uploadForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            const formData = new FormData(uploadForm);
-            const file = fileInput.files[0];
+            const files = Array.from(fileInput.files);
+            const description = document.getElementById('description').value;
 
-            if (!file) {
+            if (files.length === 0) {
                 showModal('上传失败', '请先选择要上传的文件', 'error');
                 return;
             }
 
-            // 显示进度条
-            uploadForm.classList.add('uploading');
-            progressBar.style.width = '0%';
-            progressBar.textContent = '0%';
+            // 初始化上传状态
+            uploads = files.map(file => ({
+                file,
+                status: 'pending',
+                progress: 0
+            }));
 
-            try {
-                const xhr = new XMLHttpRequest();
+            completedUploads = 0;
+            uploadCount.textContent = files.length;
+            completedCount.textContent = '0';
+            uploadSummary.style.display = 'block';
 
-                xhr.upload.addEventListener('progress', function (e) {
-                    if (e.lengthComputable) {
-                        const percentComplete = Math.round((e.loaded / e.total) * 99);
-                        progressBar.style.width = percentComplete + '%';
-                        progressBar.textContent = percentComplete + '%';
-                    }
-                });
+            // 并发上传所有文件
+            files.forEach((file, index) => {
+                uploadFile(file, index, description);
+            });
+        });
 
-                xhr.addEventListener('load', function () {
-                    try {
-                        const result = JSON.parse(xhr.responseText);
-                        if (result.success) {
-                            showModal('上传成功', result.message, 'success');
+        // 上传单个文件
+        function uploadFile(file, index, description) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('description', description);
+
+            // 更新状态为上传中
+            updateFileStatus(index, 'uploading', 0);
+
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', function (e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 99);
+                    updateFileProgress(index, percentComplete);
+                }
+            });
+
+            xhr.addEventListener('load', function () {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    if (result.success) {
+                        updateFileStatus(index, 'success', 100);
+                        completedUploads++;
+                        completedCount.textContent = completedUploads;
+
+                        // 如果所有文件都上传完成
+                        if (completedUploads === uploads.length) {
+                            showModal('上传完成', `所有文件上传成功！共 ${completedUploads} 个文件`, 'success');
                             resetUpload();
                             uploadForm.reset();
-                        } else {
-                            showModal('上传失败', result.message, 'error');
                         }
-                    } catch (error) {
-                        showModal('错误', '解析服务器响应时出错: ' + error.message, 'error');
-                    } finally {
-                        uploadForm.classList.remove('uploading');
+                    } else {
+                        updateFileStatus(index, 'error', 0, result.message);
+                        completedUploads++;
+                        completedCount.textContent = completedUploads;
                     }
-                });
+                } catch (error) {
+                    updateFileStatus(index, 'error', 0, '解析服务器响应时出错');
+                    completedUploads++;
+                    completedCount.textContent = completedUploads;
+                }
+            });
 
-                xhr.addEventListener('error', function () {
-                    showModal('错误', '上传过程中发生网络错误', 'error');
-                    uploadForm.classList.remove('uploading');
-                });
+            xhr.addEventListener('error', function () {
+                updateFileStatus(index, 'error', 0, '上传过程中发生网络错误');
+                completedUploads++;
+                completedCount.textContent = completedUploads;
+            });
 
-                xhr.addEventListener('abort', function () {
-                    showModal('取消', '上传已被取消', 'error');
-                    uploadForm.classList.remove('uploading');
-                });
+            xhr.addEventListener('abort', function () {
+                updateFileStatus(index, 'error', 0, '上传已被取消');
+                completedUploads++;
+                completedCount.textContent = completedUploads;
+            });
 
-                xhr.open('POST', '/upload');
-                xhr.send(formData);
+            xhr.open('POST', '/upload');
+            xhr.send(formData);
+        }
 
-            } catch (error) {
-                showModal('错误', '上传过程中发生错误: ' + error.message, 'error');
-                uploadForm.classList.remove('uploading');
+        // 更新文件上传进度
+        function updateFileProgress(index, percent) {
+            const progressBar = document.getElementById(`progress-${index}`);
+            if (progressBar) {
+                progressBar.style.width = percent + '%';
+                progressBar.textContent = percent + '%';
             }
-        });
+
+            // 更新上传状态对象
+            if (uploads[index]) {
+                uploads[index].progress = percent;
+            }
+        }
+
+        // 更新文件状态
+        function updateFileStatus(index, status, progress, message = '') {
+            const statusElement = document.getElementById(`status-${index}`);
+            if (statusElement) {
+                statusElement.className = `status ${status}`;
+
+                switch (status) {
+                    case 'uploading':
+                        statusElement.textContent = '上传中...';
+                        break;
+                    case 'success':
+                        statusElement.textContent = '上传成功';
+                        break;
+                    case 'error':
+                        statusElement.textContent = message || '上传失败';
+                        break;
+                    default:
+                        statusElement.textContent = '等待上传';
+                }
+            }
+
+            // 更新上传状态对象
+            if (uploads[index]) {
+                uploads[index].status = status;
+                uploads[index].progress = progress;
+                if (message) {
+                    uploads[index].message = message;
+                }
+            }
+        }
 
         // 关闭弹窗
         modalCloseBtn.addEventListener('click', function () {
@@ -499,9 +627,10 @@
         // 重置上传状态
         function resetUpload() {
             dropzone.style.display = 'block';
-            deleteBtn.style.display = 'none';
-            fileInfo.style.display = 'none';
-            uploadForm.classList.remove('uploading');
+            fileList.style.display = 'none';
+            fileList.innerHTML = '';
+            uploadSummary.style.display = 'none';
+            fileInput.value = '';
         }
 
         // 格式化文件大小
