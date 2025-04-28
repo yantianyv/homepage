@@ -159,11 +159,30 @@
             margin-top: 5px;
         }
 
+        /* 在CSS中添加或修改以下样式 */
         .service-icon {
             font-size: 2.5rem;
             color: var(--primary-color);
             margin-bottom: 1rem;
+            height: 2.5rem;
+            /* 添加固定高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        .service-icon-img {
+            width: 2.5rem;
+            height: 2.5rem;
+            object-fit: contain;
+        }
+
+        .service-fallback-icon {
+            font-size: 2.5rem;
+            /* 确保默认图标大小与自定义图标一致 */
+            display: none;
+        }
+
 
 
         .service-card h3 {
@@ -227,9 +246,11 @@
 
         .file-info h3 {
             margin-bottom: 0.5rem;
-            color: var(--primary-dark);
+            color: var(--text-color);
+            /* 改为使用全局文本颜色 */
             word-break: break-all;
         }
+
 
         .file-description {
             color: #666;
@@ -610,7 +631,7 @@
                         <div class="service-icon">
                             <img src="/static/icons/{{ info.name }}.ico" alt="{{ info.name }}" class="service-icon-img"
                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                            <i class="fas fa-server service-fallback-icon" style="display: none;"></i>
+                            <i class="fas fa-globe service-fallback-icon" style="display: none;"></i>
                         </div>
 
                         <h3>{{ info.name }}</h3>
@@ -621,13 +642,13 @@
 
                             {% if info.domain and info.domain != default_domain and not is_local_domain %}
                             <span class="meta-item">
-                                <i class="fas fa-globe"></i> {{ info.domain }}
+                                <i class="fas fa-link"></i> {{ info.domain }}
                             </span>
                             {% endif %}
 
                             {% if info.port != 80 %}
                             <span class="meta-item">
-                                <i class="fas fa-plug"></i> {{ info.port }}
+                                <i class="fas fa-network-wired"></i> {{ info.port }}
                             </span>
                             {% endif %}
                         </div>
