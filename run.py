@@ -245,7 +245,7 @@ def upload_file():
         if file.filename == "":
             return jsonify({"success": False, "message": "没有选择文件"}), 400
 
-        if file and allowed_file(file.filename):
+        if file and not os.path.isdir(file.filename):  # 检查是否是文件夹
             try:
                 # 安全处理文件名
                 filename = secure_filename(file.filename)
@@ -282,7 +282,7 @@ def upload_file():
                     os.remove(filepath)
                 return jsonify({"success": False, "message": "文件上传失败"}), 500
         else:
-            return jsonify({"success": False, "message": "不允许的文件类型"}), 400
+            return jsonify({"success": False, "message": "不允许上传文件夹"}), 400
 
     # GET请求处理
     return render_template("upload.html", site_title=config_data.get("site_title", "服务导航中心"))
