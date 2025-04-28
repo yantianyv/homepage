@@ -2,6 +2,7 @@ config.json
 static/files/*
 static/tempfiles/*
 README.html
+static/icons/*
 
 
 

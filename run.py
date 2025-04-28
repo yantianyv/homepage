@@ -7,6 +7,9 @@ import set_cfg
 from werkzeug.utils import secure_filename
 import uuid
 import platform
+from scripts import service_icons
+
+service_icons.refresh()
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)

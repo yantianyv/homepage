@@ -160,7 +160,7 @@ def main_menu():
         print("5. 设置标题")
         print("6. 退出")
 
-        choice = input("\n请输入操作编号 (1-5): ")
+        choice = input("\n请输入操作编号 (1-6): ")
 
         if choice == "1":
             show_services(config)
