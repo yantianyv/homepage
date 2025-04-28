@@ -35,7 +35,7 @@ except:
     with open("config.json", "r", encoding="utf-8") as f:
         config_data = json.load(f)
 
-domain = config_data["domain"]
+default_domain = config_data.get("default_domain", "127.0.0.1")
 
 # 确保目录存在
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -249,13 +249,22 @@ def upload_file():
 
 @app.route("/")
 def index():
-    return render_template("index.html", services=config_data["services"], downloads=get_downloadable_files(), temp_files=get_temp_files(), site_title=config_data.get("site_title", "服务导航中心"), show_upload=True)
+    # 为每个服务添加域名信息
+    services_with_domains = {}
+    for service_id, service_info in config_data["services"].items():
+        service_with_domain = service_info.copy()
+        service_with_domain["domain"] = service_info.get("domain", default_domain)
+        services_with_domains[service_id] = service_with_domain
+
+    return render_template("index.html", services=services_with_domains, downloads=get_downloadable_files(), temp_files=get_temp_files(), site_title=config_data.get("site_title", "服务导航中心"), show_upload=True)
 
 
 @app.route("/<service>")
 def redirect_to_service(service):
     if service in config_data["services"]:
-        port = config_data["services"][service]["port"]
+        service_info = config_data["services"][service]
+        port = service_info["port"]
+        domain = service_info.get("domain", default_domain)
         return redirect(f"http://{domain}:{port}")
     return "服务未找到", 404
 

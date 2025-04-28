@@ -3,6 +3,7 @@
 import json
 import os
 import platform
+from scripts import service_icons
 
 # 配置文件路径
 CONFIG_FILE = "config.json"
@@ -24,7 +25,7 @@ def load_config():
             return json.load(f)
     else:
         return {
-            "domain": "127.0.0.1",
+            "default_domain": "127.0.0.1",
             "site_title": "初次使用请运行set_cfg.py设置域名和标题",
             "services": {},
         }
@@ -57,11 +58,12 @@ def show_services(config):
         print("没有配置任何服务！")
     else:
         for service_id, details in services:
-            print(f"- {service_id}: {details['name']} (端口: {details['port']})")
+            domain = details.get("domain", config["default_domain"])
+            print(f"- {service_id}: {details['name']} (端口: {details['port']}, 域名: {domain})")
     input("\n按回车返回主菜单...")
 
 
-# 添加服务
+# 添加服务（整合了域名设置）
 def add_service(config):
     clear()  # 清屏
     print_title("添加服务")
@@ -75,12 +77,21 @@ def add_service(config):
         except ValueError:
             print("端口号必须是数字，请重新输入。")
 
+    domain = input("请输入域名 (留空使用全局域名): ").strip()
+
     if service_id in config["services"]:
         print(f"服务 {service_id} 已存在！")
     else:
-        config["services"][service_id] = {"name": display_name, "port": port}
+        service_data = {"name": display_name, "port": port}
+        if domain:  # 只有输入了域名才添加到服务配置中
+            service_data["domain"] = domain
+
+        config["services"][service_id] = service_data
         save_config(config)
-        print(f"服务 {service_id} 添加成功！")
+
+        # 显示最终使用的域名
+        final_domain = domain if domain else config["default_domain"]
+        print(f"服务 {service_id} 添加成功！将使用域名: {final_domain}")
     input("\n按回车返回主菜单...")
 
 
@@ -118,17 +129,17 @@ def delete_service(config):
     input("\n按回车返回主菜单...")
 
 
-# 设置域名
-def set_domain(config):
+# 设置全局域名
+def set_default_domain(config):
     clear()  # 清屏
-    print_title("设置域名")
-    domain = input(f"当前域名: {config['domain']}\n请输入新的域名 (按回车保持当前域名): ")
+    print_title("设置全局域名")
+    domain = input(f"当前全局域名: {config['default_domain']}\n请输入新的全局域名 (按回车保持当前域名): ")
     if domain:
-        config["domain"] = domain
+        config["default_domain"] = domain
         save_config(config)
-        print(f"域名已设置为 {domain}")
+        print(f"全局域名已设置为 {domain}")
     else:
-        print("域名未修改。")
+        print("全局域名未修改。")
     input("\n按回车返回主菜单...")
 
 
@@ -146,7 +157,7 @@ def set_title(config):
     input("\n按回车返回主菜单...")
 
 
-# 主菜单
+# 主菜单（简化了选项）
 def main_menu():
     config = load_config()
 
@@ -156,7 +167,7 @@ def main_menu():
         print("1. 查看服务")
         print("2. 添加服务")
         print("3. 删除服务")
-        print("4. 设置域名")
+        print("4. 设置全局域名")
         print("5. 设置标题")
         print("6. 退出")
 
@@ -169,7 +180,7 @@ def main_menu():
         elif choice == "3":
             delete_service(config)
         elif choice == "4":
-            set_domain(config)
+            set_default_domain(config)
         elif choice == "5":
             set_title(config)
         elif choice == "6":
@@ -181,3 +192,4 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
+    service_icons.refresh()

@@ -23,7 +23,7 @@ def get_favicon_url(domain, port):
         # 如果没有找到，尝试默认的favicon.ico
         return urljoin(url, "favicon.ico")
     except requests.exceptions.RequestException as e:
-        print(f"获取 {url} 的favicon链接失败: {e}")
+        # print(f"获取 {url} 的favicon链接失败: {e}")
         return None
 
 
@@ -49,7 +49,6 @@ def download_favicon(domain, service_name, port, output_dir):
         with open(output_path, "wb") as f:
             f.write(response.content)
 
-        print(f"成功下载 {service_name} 的图标到 {output_path}")
     except requests.exceptions.RequestException as e:
         print(f"下载 {service_name} 的图标失败: {e}")
 
@@ -64,12 +63,8 @@ def refresh():
         print(f"读取配置文件失败: {e}")
         return
 
-    domain = config.get("domain")
+    default_domain = config.get("default_domain", "127.0.0.1")
     services = config.get("services", {})
-
-    if not domain:
-        print("配置文件中缺少domain字段")
-        return
 
     if not services:
         print("配置文件中没有服务配置")
@@ -82,12 +77,13 @@ def refresh():
     for service_key, service_info in services.items():
         service_name = service_info.get("name", service_key)
         port = service_info.get("port")
+        service_domain = service_info.get("domain", default_domain)
 
         if not port:
             print(f"服务 {service_name} 缺少端口配置，跳过")
             continue
 
-        download_favicon(domain, service_name, port, output_dir)
+        download_favicon(service_domain, service_name, port, output_dir)
 
 
 if __name__ == "__main__":

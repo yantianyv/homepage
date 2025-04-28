@@ -153,6 +153,12 @@
             height: 100%;
         }
 
+        .service-domain {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
         .service-icon {
             font-size: 2.5rem;
             color: var(--primary-color);
@@ -174,6 +180,39 @@
             border-radius: 20px;
             font-size: 0.8rem;
             margin-top: 0.5rem;
+        }
+
+        .service-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .meta-item {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .meta-item i {
+            margin-right: 4px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* 如果是深色模式 */
+        .dark-mode .meta-item {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ddd;
+        }
+
+        .dark-mode .meta-item i {
+            color: #bbb;
         }
 
         .file-icon {
@@ -557,7 +596,7 @@
     <div class="container">
         <header>
             <h1>{{ site_title }}</h1>
-            <p class="header-description">一站式访问所有服务与资源</p>
+            <p class="header-description">提供常用地址导航与资源下载</p>
         </header>
 
         <section>
@@ -569,12 +608,32 @@
                 <div class="service-card">
                     <a href="/{{ service }}">
                         <div class="service-icon">
-                            <img src="/static/icons/{{ info.name }}.ico" alt="{{info.name}}" class="service-icon-img">
+                            <img src="/static/icons/{{ info.name }}.ico" alt="{{ info.name }}" class="service-icon-img"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                            <i class="fas fa-server service-fallback-icon" style="display: none;"></i>
                         </div>
+
                         <h3>{{ info.name }}</h3>
-                        <div class="service-port">端口: {{ info.port }}</div>
+                        <div class="service-meta" style="display: flex; justify-content: center;">
+                            {% set is_local_domain = info.domain and (info.domain == 'localhost' or
+                            info.domain.startswith('10.') or
+                            info.domain.startswith('127.') or info.domain.startswith('192.')) %}
+
+                            {% if info.domain and info.domain != default_domain and not is_local_domain %}
+                            <span class="meta-item">
+                                <i class="fas fa-globe"></i> {{ info.domain }}
+                            </span>
+                            {% endif %}
+
+                            {% if info.port != 80 %}
+                            <span class="meta-item">
+                                <i class="fas fa-plug"></i> {{ info.port }}
+                            </span>
+                            {% endif %}
+                        </div>
                     </a>
                 </div>
+
 
                 {% else %}
                 <div class="empty-state">
@@ -589,7 +648,7 @@
         {% if temp_files %}
         <section>
             <div class="section-header">
-                <h2><i class="fas fa-clock"></i> 临时文件 (24小时后自动删除)</h2>
+                <h2><i class="fas fa-clock"></i> 临时文件 (上传24小时后自动删除)</h2>
                 <div>
                     <a href="/upload" class="btn" style="margin: 0 0.5rem 0 0;">
                         <i class="fas fa-upload"></i> 上传文件
