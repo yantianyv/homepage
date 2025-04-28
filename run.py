@@ -30,8 +30,16 @@ domain = config_data["domain"]
 
 # 配置上传
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "tempfiles")
+FILES_FOLDER = os.path.join(app.root_path, "static", "files")
 ALLOWED_EXTENSIONS = {"txt", "pdf", "png", "jpg", "jpeg", "gif", "zip", "rar", "7z", "doc", "docx", "xls", "xlsx", "ppt", "pptx"}
+
+# 确保上传目录和文件目录存在
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(FILES_FOLDER, exist_ok=True)
+
+# 配置大文件上传
+# app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024 * 1024 * 4  # 4GB限制
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
 def allowed_file(filename):
@@ -155,23 +163,22 @@ def format_size(size):
 
 def get_downloadable_files():
     # 读取自定义描述
-    desc_file = os.path.join(app.root_path, "static/files/descriptions.json")
+    desc_file = os.path.join(FILES_FOLDER, "descriptions.json")
     custom_descriptions = {}
     if os.path.exists(desc_file):
         with open(desc_file, "r", encoding="utf-8") as f:
             custom_descriptions = json.load(f)
 
-    files_dir = os.path.join(app.root_path, "static/files")
     categories = {}
 
     # 遍历文件目录
-    for root, dirs, files in os.walk(files_dir):
+    for root, dirs, files in os.walk(FILES_FOLDER):
         # 跳过根目录下的文件（直接放在files下的文件）
-        if root == files_dir:
+        if root == FILES_FOLDER:
             continue
 
         # 获取相对路径作为分类名
-        rel_path = os.path.relpath(root, files_dir)
+        rel_path = os.path.relpath(root, FILES_FOLDER)
         if rel_path == ".":
             continue
 
@@ -204,8 +211,8 @@ def get_downloadable_files():
 
     # 处理根目录下的文件（无分类文件）
     root_files = []
-    for filename in os.listdir(files_dir):
-        filepath = os.path.join(files_dir, filename)
+    for filename in os.listdir(FILES_FOLDER):
+        filepath = os.path.join(FILES_FOLDER, filename)
         if os.path.isfile(filepath) and filename != "descriptions.json":
             stat = os.stat(filepath)
             root_files.append(
@@ -238,7 +245,7 @@ def upload_file():
         if file.filename == "":
             return jsonify({"success": False, "message": "没有选择文件"}), 400
 
-        if file:
+        if file and allowed_file(file.filename):
             try:
                 # 安全处理文件名
                 filename = secure_filename(file.filename)
@@ -247,7 +254,14 @@ def upload_file():
                 unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
                 filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
 
-                file.save(filepath)
+                # 使用流式写入处理大文件
+                with open(filepath, "wb") as f:
+                    # 分块读取文件内容并写入
+                    while True:
+                        chunk = file.stream.read(8192)  # 8KB的块
+                        if not chunk:
+                            break
+                        f.write(chunk)
 
                 # 获取描述信息，如果为空则使用默认值
                 description = request.form.get("description", "").strip()
@@ -263,6 +277,9 @@ def upload_file():
                 return jsonify({"success": True, "message": "文件上传成功！"})
             except Exception as e:
                 app.logger.error(f"Error uploading file: {e}")
+                # 如果上传过程中出错，删除可能已部分上传的文件
+                if os.path.exists(filepath):
+                    os.remove(filepath)
                 return jsonify({"success": False, "message": "文件上传失败"}), 500
         else:
             return jsonify({"success": False, "message": "不允许的文件类型"}), 400
@@ -289,17 +306,28 @@ def redirect_to_service(service):
 @app.route("/download/<path:filename>")
 def download_file(filename):
     try:
-        # 获取原始文件名
-        desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
-        original_filename = filename
-        if os.path.exists(desc_file):
-            with open(desc_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                original_filename = data.get("original_filename", filename)
+        # 检查文件是否在files目录中
+        filepath = os.path.join(FILES_FOLDER, filename)
+        if os.path.exists(filepath):
+            return send_from_directory(FILES_FOLDER, filename, as_attachment=True)
 
-        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True, download_name=original_filename)  # 设置下载文件名为原始文件名
-    except FileNotFoundError:
+        # 检查文件是否在tempfiles目录中
+        temp_filepath = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.exists(temp_filepath):
+            # 获取原始文件名
+            desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
+            original_filename = filename
+            if os.path.exists(desc_file):
+                with open(desc_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    original_filename = data.get("original_filename", filename)
+
+            return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True, download_name=original_filename)
+
         return "文件不存在", 404
+    except Exception as e:
+        app.logger.error(f"Error downloading file {filename}: {e}")
+        return "下载文件时出错", 500
 
 
 @app.route("/download/tempfiles/<filename>")
@@ -313,7 +341,7 @@ def download_tempfile(filename):
                 data = json.load(f)
                 original_filename = data.get("original_filename", filename)
 
-        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True, download_name=original_filename)  # 设置下载文件名为原始文件名
+        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True, download_name=original_filename)
     except FileNotFoundError:
         return "文件不存在", 404
 
