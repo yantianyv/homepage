@@ -24,7 +24,7 @@ def load_config():
             return json.load(f)
     else:
         return {
-            "domain": "http://localhost",
+            "domain": "127.0.0.1",
             "site_title": "初次使用请运行set_cfg.py设置域名和标题",
             "services": {},
         }
@@ -122,9 +122,7 @@ def delete_service(config):
 def set_domain(config):
     clear()  # 清屏
     print_title("设置域名")
-    domain = input(
-        f"当前域名: {config['domain']}\n请输入新的域名 (按回车保持当前域名): "
-    )
+    domain = input(f"当前域名: {config['domain']}\n请输入新的域名 (按回车保持当前域名): ")
     if domain:
         config["domain"] = domain
         save_config(config)
@@ -138,9 +136,7 @@ def set_domain(config):
 def set_title(config):
     clear()  # 清屏
     print_title("设置标题")
-    site_title = input(
-        f"当前标题: {config['site_title']}\n请输入新的标题 (按回车保持当前标题): "
-    )
+    site_title = input(f"当前标题: {config['site_title']}\n请输入新的标题 (按回车保持当前标题): ")
     if site_title:
         config["site_title"] = site_title
         save_config(config)
