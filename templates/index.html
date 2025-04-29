@@ -629,7 +629,8 @@
                 <div class="service-card">
                     <a href="/{{ service }}">
                         <div class="service-icon">
-                            <img src="/static/icons/{{ info.name }}.ico" alt="{{ info.name }}" class="service-icon-img"
+                            <img src="{{ info.icon.path if info.icon else '/static/icons/default.ico' }}"
+                                alt="{{ info.name }}" class="service-icon-img"
                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                             <i class="fas fa-globe service-fallback-icon" style="display: none;"></i>
                         </div>
