@@ -13,17 +13,26 @@ def get_favicon_url(domain, port):
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # 查找可能的favicon链接
-        icon_link = soup.find("link", rel=lambda x: x and x.lower() in ["icon", "shortcut icon"])
+        # 查找所有可能的favicon相关链接
+        icon_links = soup.find_all("link", rel=lambda x: x and "icon" in x.lower())
 
-        if icon_link and icon_link.get("href"):
-            favicon_url = urljoin(url, icon_link["href"])
-            return favicon_url
+        for link in icon_links:
+            href = link.get("href")
+            if href:
+                return urljoin(url, href)
 
-        # 如果没有找到，尝试默认的favicon.ico
-        return urljoin(url, "favicon.ico")
-    except requests.exceptions.RequestException as e:
-        # print(f"获取 {url} 的favicon链接失败: {e}")
+        # 尝试常见路径
+        for path in ["/favicon.ico", "/favicon.png", "/img/favicon.svg"]:
+            test_url = urljoin(url, path)
+            try:
+                r = requests.head(test_url, timeout=5)
+                if r.status_code == 200:
+                    return test_url
+            except:
+                continue
+
+        return None
+    except requests.exceptions.RequestException:
         return None
 
 
