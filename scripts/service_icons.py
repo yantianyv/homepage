@@ -3,6 +3,8 @@ import requests
 from urllib.parse import urljoin
 import json
 from bs4 import BeautifulSoup
+from PIL import Image
+import io
 
 
 def get_favicon_url(domain, port):
@@ -36,6 +38,29 @@ def get_favicon_url(domain, port):
         return None
 
 
+def convert_to_ico(image_data):
+    """将图像数据转换为ICO格式"""
+    try:
+        # 从字节数据打开图像
+        img = Image.open(io.BytesIO(image_data))
+
+        # 如果图像有透明度通道，确保保留它
+        if img.mode in ("RGBA", "LA"):
+            # 创建一个新的透明背景图像
+            ico_img = Image.new("RGBA", img.size, (0, 0, 0, 0))
+            ico_img.paste(img, (0, 0), img)
+        else:
+            ico_img = img.convert("RGB")
+
+        # 将图像保存为ICO格式到内存中
+        ico_bytes = io.BytesIO()
+        ico_img.save(ico_bytes, format="ICO", sizes=[(ico_img.size[0], ico_img.size[1])])
+        return ico_bytes.getvalue()
+    except Exception as e:
+        print(f"图像转换失败: {e}")
+        return None
+
+
 def download_favicon(domain, service_name, port, output_dir):
     # 创建输出目录（如果不存在）
     os.makedirs(output_dir, exist_ok=True)
@@ -54,12 +79,31 @@ def download_favicon(domain, service_name, port, output_dir):
         response = requests.get(favicon_url, timeout=10)
         response.raise_for_status()
 
-        # 保存图标文件
-        with open(output_path, "wb") as f:
-            f.write(response.content)
+        # 获取内容类型和文件扩展名
+        content_type = response.headers.get("Content-Type", "").lower()
+        file_ext = os.path.splitext(favicon_url)[1].lower()
+
+        # 检查是否是ICO格式
+        is_ico = (".ico" in file_ext) or ("image/x-icon" in content_type)
+
+        if is_ico:
+            # 直接保存ICO文件
+            with open(output_path, "wb") as f:
+                f.write(response.content)
+        else:
+            # 转换为ICO格式
+            ico_data = convert_to_ico(response.content)
+            if ico_data:
+                with open(output_path, "wb") as f:
+                    f.write(ico_data)
+                print(f"已转换并保存 {service_name} 的ICO图标")
+            else:
+                print(f"无法转换 {service_name} 的图标为ICO格式")
 
     except requests.exceptions.RequestException as e:
         print(f"下载 {service_name} 的图标失败: {e}")
+    except Exception as e:
+        print(f"处理 {service_name} 的图标时出错: {e}")
 
 
 def refresh():
