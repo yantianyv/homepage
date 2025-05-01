@@ -11,7 +11,7 @@ from scripts import service_icons
 
 service_icons.refresh()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", template_folder="templates")
 app.secret_key = os.urandom(24)
 
 
