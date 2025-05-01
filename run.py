@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from flask import Flask, jsonify, render_template, redirect, request, send_from_directory
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -20,9 +21,9 @@ def inject_now():
     return {"now": datetime.now}
 
 
-# 配置上传目录
-UPLOAD_FOLDER = os.path.join(app.root_path, "static", "tempfiles")
-FILES_FOLDER = os.path.join(app.root_path, "static", "files")
+FILES_FOLDER = "./files/"
+UPLOAD_FOLDER = "./files/.tempfiles/"
+
 
 # 读取配置文件
 try:
@@ -150,7 +151,7 @@ def get_downloadable_files():
 
     categories = {}
     for root, dirs, files in os.walk(FILES_FOLDER):
-        if root == FILES_FOLDER:
+        if root == FILES_FOLDER or root == UPLOAD_FOLDER:
             continue
 
         rel_path = os.path.relpath(root, FILES_FOLDER)

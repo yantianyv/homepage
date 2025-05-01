@@ -1,11 +1,8 @@
 config.json
-static/files/*
-static/tempfiles/*
 README.html
-static/icons/*
 build/
-*.bin
-
+files/
+icons/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -88,7 +88,7 @@ def refresh():
         return
 
     # 输出目录
-    output_dir = "./static/icons"
+    output_dir = "./icons"
 
     # 记录是否有配置变更
     config_changed = False
