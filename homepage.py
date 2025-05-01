@@ -4,11 +4,27 @@ import sys
 from flask import Flask, jsonify, render_template, redirect, request, send_from_directory
 from pathlib import Path
 from datetime import datetime, timedelta
-import set_cfg
 from werkzeug.utils import secure_filename
 import uuid
 import platform
-from scripts import service_icons
+from scripts import service_icons, set_cfg
+
+# 获取启动参数
+if len(sys.argv) > 1:
+    # help
+    if sys.argv[1] == "--help" or sys.argv[1] == "-h":
+        help_text = """
+        Usage: python run.py [options]
+        Options:
+        -h, --help            Show this help message
+        -s, --set             Set configuration
+        """
+        print(help_text)
+        exit(0)
+    # set
+    if sys.argv[1] == "--set" or sys.argv[1] == "-s":
+        set_cfg.main_menu()
+        exit(0)
 
 service_icons.refresh()
 

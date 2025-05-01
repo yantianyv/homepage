@@ -1,4 +1,4 @@
-nuitka ./run.py \
+nuitka ./homepage.py \
     --standalone\
     --onefile\
     --include-data-dir=static=static \

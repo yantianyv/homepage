@@ -26,7 +26,7 @@ def load_config():
     else:
         return {
             "default_domain": "127.0.0.1",
-            "site_title": "初次使用请运行set_cfg.py设置域名和标题",
+            "site_title": "请使用启动参数 -s 设置域名和标题",
             "services": {},
         }
 
