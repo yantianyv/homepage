@@ -3,7 +3,8 @@ static/files/*
 static/tempfiles/*
 README.html
 static/icons/*
-
+*.dist/
+*.build/
 
 
 # Byte-compiled / optimized / DLL files
