@@ -37,8 +37,9 @@ def inject_now():
     return {"now": datetime.now}
 
 
-FILES_FOLDER = "./files/"
-UPLOAD_FOLDER = "./files/.tempfiles/"
+FILES_PATH = "./files"
+UPLOAD_FOLDER = ".tempfiles"
+UPLOAD_PATH = FILES_PATH + "/" + UPLOAD_FOLDER
 
 
 # 读取配置文件
@@ -47,17 +48,17 @@ try:
         config_data = json.load(f)
 except:
     set_cfg.main_menu()
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    os.makedirs(FILES_FOLDER, exist_ok=True)
+    os.makedirs(UPLOAD_PATH, exist_ok=True)
+    os.makedirs(FILES_PATH, exist_ok=True)
     with open("config.json", "r", encoding="utf-8") as f:
         config_data = json.load(f)
 
 default_domain = config_data.get("default_domain", "127.0.0.1")
 
 # 确保目录存在
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(FILES_FOLDER, exist_ok=True)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_PATH, exist_ok=True)
+os.makedirs(FILES_PATH, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_PATH
 
 
 def get_client_info():
@@ -69,15 +70,15 @@ def get_client_info():
 
 def cleanup_tempfiles():
     now = datetime.now()
-    for filename in os.listdir(UPLOAD_FOLDER):
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
+    for filename in os.listdir(UPLOAD_PATH):
+        filepath = os.path.join(UPLOAD_PATH, filename)
         if os.path.isfile(filepath):
             stat = os.stat(filepath)
             file_time = datetime.fromtimestamp(stat.st_mtime)
             if (now - file_time) > timedelta(hours=24):
                 try:
                     os.remove(filepath)
-                    desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
+                    desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
                     if os.path.exists(desc_file):
                         os.remove(desc_file)
                 except Exception as e:
@@ -87,11 +88,11 @@ def cleanup_tempfiles():
 def get_temp_files():
     cleanup_tempfiles()
     files = []
-    for filename in os.listdir(UPLOAD_FOLDER):
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
+    for filename in os.listdir(UPLOAD_PATH):
+        filepath = os.path.join(UPLOAD_PATH, filename)
         if os.path.isfile(filepath) and not filename.startswith("."):
             stat = os.stat(filepath)
-            desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
+            desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
             description = "临时文件"
             uploader_info = {}
             original_filename = filename
@@ -159,19 +160,22 @@ def format_size(size):
 
 
 def get_downloadable_files():
-    desc_file = os.path.join(FILES_FOLDER, "descriptions.json")
+    desc_file = os.path.join(FILES_PATH, "descriptions.json")
     custom_descriptions = {}
     if os.path.exists(desc_file):
         with open(desc_file, "r", encoding="utf-8") as f:
             custom_descriptions = json.load(f)
 
     categories = {}
-    for root, dirs, files in os.walk(FILES_FOLDER):
-        if root == FILES_FOLDER or root == UPLOAD_FOLDER:
+    for root, dirs, files in os.walk(FILES_PATH):
+        if root == FILES_PATH:
             continue
 
-        rel_path = os.path.relpath(root, FILES_FOLDER)
+        rel_path = os.path.relpath(root, FILES_PATH)
         if rel_path == ".":
+            continue
+
+        if rel_path == UPLOAD_FOLDER:
             continue
 
         category_name = rel_path.replace(os.sep, " / ")
@@ -200,8 +204,8 @@ def get_downloadable_files():
             categories[category_name] = category_files
 
     root_files = []
-    for filename in os.listdir(FILES_FOLDER):
-        filepath = os.path.join(FILES_FOLDER, filename)
+    for filename in os.listdir(FILES_PATH):
+        filepath = os.path.join(FILES_PATH, filename)
         if os.path.isfile(filepath) and filename != "descriptions.json":
             stat = os.stat(filepath)
             root_files.append(
@@ -237,7 +241,7 @@ def upload_file():
             try:
                 filename = secure_filename(file.filename)
                 unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
-                filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+                filepath = os.path.join(UPLOAD_PATH, unique_filename)
 
                 with open(filepath, "wb") as f:
                     while True:
@@ -249,7 +253,7 @@ def upload_file():
                 description = request.form.get("description", "").strip() or "上传者没有提供描述信息"
                 desc_data = {"description": description, "uploader": get_client_info(), "upload_time": datetime.now().isoformat(), "original_filename": file.filename}
 
-                with open(os.path.join(UPLOAD_FOLDER, f".{unique_filename}.json"), "w", encoding="utf-8") as f:
+                with open(os.path.join(UPLOAD_PATH, f".{unique_filename}.json"), "w", encoding="utf-8") as f:
                     json.dump(desc_data, f, ensure_ascii=False, indent=2)
 
                 return jsonify({"success": True, "message": "文件上传成功！"})
@@ -289,19 +293,19 @@ def redirect_to_service(service):
 @app.route("/download/<path:filename>")
 def download_file(filename):
     try:
-        filepath = os.path.join(FILES_FOLDER, filename)
+        filepath = os.path.join(FILES_PATH, filename)
         if os.path.exists(filepath):
-            return send_from_directory(FILES_FOLDER, filename, as_attachment=True)
+            return send_from_directory(FILES_PATH, filename, as_attachment=True)
 
-        temp_filepath = os.path.join(UPLOAD_FOLDER, filename)
+        temp_filepath = os.path.join(UPLOAD_PATH, filename)
         if os.path.exists(temp_filepath):
-            desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
+            desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
             original_filename = filename
             if os.path.exists(desc_file):
                 with open(desc_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     original_filename = data.get("original_filename", filename)
-            return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True, download_name=original_filename)
+            return send_from_directory(UPLOAD_PATH, filename, as_attachment=True, download_name=original_filename)
 
         return "文件不存在", 404
     except Exception as e:
@@ -312,13 +316,13 @@ def download_file(filename):
 @app.route("/download/tempfiles/<filename>")
 def download_tempfile(filename):
     try:
-        desc_file = os.path.join(UPLOAD_FOLDER, f".{filename}.json")
+        desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
         original_filename = filename
         if os.path.exists(desc_file):
             with open(desc_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 original_filename = data.get("original_filename", filename)
-        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True, download_name=original_filename)
+        return send_from_directory(UPLOAD_PATH, filename, as_attachment=True, download_name=original_filename)
     except FileNotFoundError:
         return "文件不存在", 404
 
