@@ -27,5 +27,4 @@ nuitka ./homepage.py \
     --include-data-dir=static=static \
     --include-data-dir=templates=templates \
     --output-filename=${OUTPUT_NAME} \
-    --output-dir=build \
-    --remove-output
+    --output-dir=build
