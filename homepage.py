@@ -9,15 +9,18 @@ import uuid
 import platform
 from scripts import service_icons, set_cfg
 
+PORT = 80
+
 # 获取启动参数
 if len(sys.argv) > 1:
     # help
     if sys.argv[1] == "--help" or sys.argv[1] == "-h":
-        help_text = """
+        help_text = f"""
         Usage: python run.py [options]
         Options:
         -h, --help            Show this help message
         -s, --set             Set configuration
+        -p, --port            Run with port(default: {PORT})
         """
         print(help_text)
         exit(0)
@@ -25,7 +28,17 @@ if len(sys.argv) > 1:
     if sys.argv[1] == "--set" or sys.argv[1] == "-s":
         set_cfg.main_menu()
         exit(0)
+    # port
+    if sys.argv[1] == "--port" or sys.argv[1] == "-p":
+        if len(sys.argv) > 2:
+            PORT = int(sys.argv[2])
+        else:
+            PORT = 80
+    else:
+        print("Unknown option")
+        exit(0)
 
+        
 service_icons.refresh()
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
@@ -342,4 +355,4 @@ def download_file(filepath):
         return "下载文件时出错", 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80)
+    app.run(host="0.0.0.0", port=PORT)
