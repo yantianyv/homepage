@@ -23,7 +23,7 @@ python -m nuitka homepage.py ^
     --standalone ^
     --onefile ^
     --jobs=%NUMBER_OF_PROCESSORS% ^
-    --lto=yes ^
+    --lto=no ^
     --include-data-dir=static=static ^
     --include-data-dir=templates=templates ^
     --output-filename=%OUTPUT_NAME% ^

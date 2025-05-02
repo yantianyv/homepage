@@ -36,10 +36,15 @@ app.secret_key = os.urandom(24)
 def inject_now():
     return {"now": datetime.now}
 
-
-FILES_PATH = "./files"
+if "__compiled__" in globals():
+    print("检测到当前运行的是使用nuitka打包后的二进制文件")
+    BASE_DIR = os.path.dirname(sys.executable) # Nuitka/ PyInstaller 单文件模式
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FILES_PATH = os.path.join(BASE_DIR, "files")
 UPLOAD_FOLDER = ".tempfiles"
-UPLOAD_PATH = FILES_PATH + "/" + UPLOAD_FOLDER +"/"
+UPLOAD_PATH = os.path.join(BASE_DIR, FILES_PATH, UPLOAD_FOLDER)
+print(f"FILES_PATH: {FILES_PATH} \nUPLOAD_PATH: {UPLOAD_PATH}")
 
 
 # 读取配置文件
@@ -291,27 +296,45 @@ def redirect_to_service(service):
 
 @app.route("/download/<path:filepath>")
 def download_file(filepath):
+    print("filepath:", filepath)
     try:
-        filename = os.path.basename(filepath)
+        filepath = os.path.normpath(filepath)  # 统一转为系统路径格式
+        filename = os.path.basename(filepath)  # 提取纯文件名
+        file_dir = os.path.dirname(filepath)   # 提取目录部分
+        full_path = os.path.join(FILES_PATH, filepath)
+
         # 如果filepath对应的文件存在
-        if os.path.exists(os.path.join(FILES_PATH, filepath)):
+        if os.path.exists(full_path):
             desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
             original_filename = filepath
+            
+            # 处理临时文件
             if os.path.exists(desc_file):
                 with open(desc_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     original_filename = data.get("original_filename")
                     print("\n"+original_filename)
+                print("识别为临时文件")
+                print(f"下载目录: {FILES_PATH}， 文件路径: {filepath}")
+                return send_from_directory(os.path.join(FILES_PATH, file_dir), filename, 
+                                             as_attachment=True, download_name=original_filename)
+            # 处理长期文件
             else:
-                print("不是临时文件，查找路径："+os.path.join(UPLOAD_PATH, f".{filename}.json"))
-            return send_from_directory(FILES_PATH, filepath, as_attachment=True, download_name=original_filename)
+                # 非根目录下的文件
+                if file_dir:
+                    return send_from_directory(os.path.join(FILES_PATH, file_dir), filename, 
+                                            as_attachment=True)
+                #根目录下的文件
+                else:
+                    return send_from_directory(FILES_PATH, filename, 
+                                          as_attachment=True)
         else:
+            print(f"文件{full_path}不存在")
             return "文件不存在", 404
     except Exception as e:
         app.logger.error(f"Error downloading file {filepath}: {e}")
+        print(f"文件{os.path.join(FILES_PATH, filepath)}下载出错")
         return "下载文件时出错", 500
-
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)
