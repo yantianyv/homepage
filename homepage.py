@@ -110,7 +110,7 @@ def get_temp_files():
             files.append(
                 {
                     "name": original_filename,
-                    "filename": f"tempfiles/{filename}",
+                    "filename": f"{UPLOAD_FOLDER}/{filename}",
                     "size": stat.st_size,
                     "formatted_size": format_size(stat.st_size),
                     "icon": get_file_icon(filename),
@@ -289,42 +289,28 @@ def redirect_to_service(service):
         return redirect(f"http://{domain}:{port}")
     return "服务未找到", 404
 
-
-@app.route("/download/<path:filename>")
-def download_file(filename):
+@app.route("/download/<path:filepath>")
+def download_file(filepath):
     try:
-        filepath = os.path.join(FILES_PATH, filename)
-        if os.path.exists(filepath):
-            return send_from_directory(FILES_PATH, filename, as_attachment=True)
-
-        temp_filepath = os.path.join(UPLOAD_PATH, filename)
-        if os.path.exists(temp_filepath):
+        filename = os.path.basename(filepath)
+        # 如果filepath对应的文件存在
+        if os.path.exists(os.path.join(FILES_PATH, filepath)):
             desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
-            original_filename = filename
+            original_filename = filepath
             if os.path.exists(desc_file):
                 with open(desc_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    original_filename = data.get("original_filename", filename)
-            return send_from_directory(UPLOAD_PATH, filename, as_attachment=True, download_name=original_filename)
-
-        return "文件不存在", 404
+                    original_filename = data.get("original_filename")
+                    print("\n"+original_filename)
+            else:
+                print("不是临时文件，查找路径："+os.path.join(UPLOAD_PATH, f".{filename}.json"))
+            return send_from_directory(FILES_PATH, filepath, as_attachment=True, download_name=original_filename)
+        else:
+            return "文件不存在", 404
     except Exception as e:
-        app.logger.error(f"Error downloading file {filename}: {e}")
+        app.logger.error(f"Error downloading file {filepath}: {e}")
         return "下载文件时出错", 500
 
-
-@app.route("/download/tempfiles/<filename>")
-def download_tempfile(filename):
-    try:
-        desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
-        original_filename = filename
-        if os.path.exists(desc_file):
-            with open(desc_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                original_filename = data.get("original_filename", filename)
-        return send_from_directory(UPLOAD_PATH, filename, as_attachment=True, download_name=original_filename)
-    except FileNotFoundError:
-        return "文件不存在", 404
 
 
 if __name__ == "__main__":
