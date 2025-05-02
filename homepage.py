@@ -39,7 +39,7 @@ def inject_now():
 
 FILES_PATH = "./files"
 UPLOAD_FOLDER = ".tempfiles"
-UPLOAD_PATH = FILES_PATH + "/" + UPLOAD_FOLDER
+UPLOAD_PATH = FILES_PATH + "/" + UPLOAD_FOLDER +"/"
 
 
 # 读取配置文件
