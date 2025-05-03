@@ -22,7 +22,7 @@ echo "正在编译..."
 nuitka ./homepage.py \
     --standalone \
     --onefile \
-    --jobs=$(nproc) \
+    --jobs=$(nproc)-1 \
     --lto=yes \
     --include-data-dir=static=static \
     --include-data-dir=templates=templates \

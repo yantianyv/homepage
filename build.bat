@@ -22,7 +22,7 @@ echo е§дкБрвы...
 python -m nuitka homepage.py ^
     --standalone ^
     --onefile ^
-    --jobs=%NUMBER_OF_PROCESSORS% ^
+    --jobs=%NUMBER_OF_PROCESSORS%-1 ^
     --lto=no ^
     --include-data-dir=static=static ^
     --include-data-dir=templates=templates ^
