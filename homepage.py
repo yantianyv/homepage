@@ -52,8 +52,8 @@ def inject_now():
 if "__compiled__" in globals():
     print("检测到当前运行的是使用nuitka打包后的二进制文件")
     if os.name == "posix":
-        print("linxu系统中，下载资源存储在 ~/.homepage/ 下")
-        BASE_DIR = "~/.homepage/"
+        # print("linxu系统中，下载资源存储在 ~/.homepage/ 下")
+        BASE_DIR = "."
     else:
         BASE_DIR = os.path.dirname(sys.executable) # Nuitka/ PyInstaller 单文件模式
 else:
