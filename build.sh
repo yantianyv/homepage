@@ -1,7 +1,23 @@
 #!/bin/bash
 
+# 安装依赖项（Debian）
+DEPENDENCIES=("python3" "python3.10-venv" "python3-dev" "gcc" "make" "ccache")
+MISSING_DEPENDENCIES=()
+
+for DEP in "${DEPENDENCIES[@]}"; do
+    if ! dpkg -l | grep -qw "$DEP"; then
+        MISSING_DEPENDENCIES+=("$DEP")
+    fi
+done
+
+if [ ${#MISSING_DEPENDENCIES[@]} -ne 0 ]; then
+    echo "正在安装缺失的依赖项: ${MISSING_DEPENDENCIES[@]}"
+    sudo apt install "${MISSING_DEPENDENCIES[@]}"
+else
+    echo "所有依赖项都已安装。"
+fi
+
 # 检查并激活虚拟环境
-if [ -d "./venv" ]; then
     source ./venv/bin/activate
 else
     echo "正在创建虚拟环境..."
