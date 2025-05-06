@@ -191,6 +191,7 @@ def get_downloadable_files():
 
     categories = {}
     for root, dirs, files in os.walk(FILES_PATH):
+        dirs.sort()
         if root == FILES_PATH:
             continue
 
