@@ -51,7 +51,7 @@ def inject_now():
 if "__compiled__" in globals():
     print("检测到当前运行的是使用nuitka打包后的二进制文件")
     if os.name == "posix":
-        BASE_DIR = "."
+        BASE_DIR = os.getcwd()
         if os.getuid() != 0 and PORT<1024:
             print("Linux系统中，小于1024的端口可能需要sudo权限。")
     else:

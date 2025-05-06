@@ -25,7 +25,7 @@ else
     python -m venv venv
     source ./venv/bin/activate
     echo "正在安装依赖项，请确保网络通畅..."
-    pip install -r requirements.txt -i https://mirrors.xjtu.edu.cn/pypi/web/simple
+    pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 fi
 
 # 动态计算并发任务数（保留至少1核心）
