@@ -31,8 +31,12 @@ def load_config():
         }
 
 
-# 保存配置文件
+# 保存配置文件（按服务ID排序）
 def save_config(config):
+    # 对services字典按键排序
+    sorted_services = dict(sorted(config["services"].items()))
+    config["services"] = sorted_services
+    
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=4, ensure_ascii=False)
 
