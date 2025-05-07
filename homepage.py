@@ -250,6 +250,57 @@ def get_downloadable_files():
 
     return categories
 
+@app.route("/")
+def index():
+    # 为每个服务添加域名信息
+    services_with_domains = {}
+    for service_id, service_info in config_data["services"].items():
+        service_with_domain = service_info.copy()
+        service_with_domain["domain"] = service_info.get("domain", default_domain)
+        services_with_domains[service_id] = service_with_domain
+
+    return render_template("index.html", services=services_with_domains, downloads=get_downloadable_files(), temp_files=get_temp_files(), site_title=config_data.get("site_title", "服务导航中心"), show_upload=True)
+
+
+@app.route("/<service>")
+def redirect_to_service(service):
+    if service in config_data["services"]:
+        service_info = config_data["services"][service]
+        port = service_info["port"]
+        domain = service_info.get("domain", default_domain)
+        return redirect(f"http://{domain}:{port}")
+    return "服务未找到", 404
+
+@app.route("/favicon/<service_id>")
+def get_service_favicon(service_id):
+    """返回指定服务的favicon图标"""
+    try:
+        # 检查服务是否存在
+        if service_id not in config_data["services"]:
+            return "Service not found", 404
+        
+        # 获取服务的favicon文件名
+        favicon_name = config_data["services"][service_id].get("favicon")
+        if not favicon_name:
+            return "Favicon not configured for this service", 404
+        
+        # 构建favicon文件路径
+        favicon_path = os.path.join(BASE_DIR, "favicons", favicon_name)
+        
+        # 检查文件是否存在
+        if not os.path.exists(favicon_path):
+            return "Favicon file not found", 404
+        
+        # 发送文件
+        return send_from_directory(
+            directory=os.path.join(BASE_DIR, "favicons"),
+            path=favicon_name,
+            mimetype="image/x-icon"  # 自动检测MIME类型
+        )
+        
+    except Exception as e:
+        app.logger.error(f"Error serving favicon for {service_id}: {e}")
+        return "Internal server error", 500
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload_file():
@@ -290,28 +341,6 @@ def upload_file():
             return jsonify({"success": False, "message": "不允许上传文件夹"}), 400
 
     return render_template("upload.html", site_title=config_data.get("site_title", "服务导航中心"))
-
-
-@app.route("/")
-def index():
-    # 为每个服务添加域名信息
-    services_with_domains = {}
-    for service_id, service_info in config_data["services"].items():
-        service_with_domain = service_info.copy()
-        service_with_domain["domain"] = service_info.get("domain", default_domain)
-        services_with_domains[service_id] = service_with_domain
-
-    return render_template("index.html", services=services_with_domains, downloads=get_downloadable_files(), temp_files=get_temp_files(), site_title=config_data.get("site_title", "服务导航中心"), show_upload=True)
-
-
-@app.route("/<service>")
-def redirect_to_service(service):
-    if service in config_data["services"]:
-        service_info = config_data["services"][service]
-        port = service_info["port"]
-        domain = service_info.get("domain", default_domain)
-        return redirect(f"http://{domain}:{port}")
-    return "服务未找到", 404
 
 @app.route("/download/<path:filepath>")
 def download_file(filepath):
@@ -354,6 +383,8 @@ def download_file(filepath):
         app.logger.error(f"Error downloading file {filepath}: {e}")
         print(f"文件{os.path.join(FILES_PATH, filepath)}下载出错")
         return "下载文件时出错", 500
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT)

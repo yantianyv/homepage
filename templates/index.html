@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ site_title }}</title>
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"> -->
     <link rel="stylesheet" href="/static/fontawesome-free-6.7.2-web/css/all.min.css">
     <style>
         :root {
@@ -159,31 +158,25 @@
             margin-top: 5px;
         }
 
-        /* 在CSS中添加或修改以下样式 */
         .service-icon {
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
+            width: 2.5rem;
             height: 2.5rem;
-            /* 添加固定高度 */
+            margin: 0 auto 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .service-icon-img {
-            width: 2.5rem;
-            height: 2.5rem;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
         }
 
         .service-fallback-icon {
-            font-size: 2.5rem;
-            /* 确保默认图标大小与自定义图标一致 */
-            display: none;
+            font-size: 2rem;
+            color: var(--primary-color);
         }
-
-
 
         .service-card h3 {
             margin-bottom: 0.5rem;
@@ -208,6 +201,7 @@
             margin-top: 8px;
             font-size: 0.85em;
             color: #555;
+            justify-content: center;
         }
 
         .meta-item {
@@ -224,16 +218,6 @@
             color: #666;
         }
 
-        /* 如果是深色模式 */
-        .dark-mode .meta-item {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ddd;
-        }
-
-        .dark-mode .meta-item i {
-            color: #bbb;
-        }
-
         .file-icon {
             font-size: 2rem;
             color: var(--primary-color);
@@ -247,10 +231,8 @@
         .file-info h3 {
             margin-bottom: 0.5rem;
             color: var(--text-color);
-            /* 改为使用全局文本颜色 */
             word-break: break-all;
         }
-
 
         .file-description {
             color: #666;
@@ -318,7 +300,6 @@
             border-top: 1px solid #eee;
         }
 
-        /* 分类样式 - 重点修改部分 */
         .category-section {
             margin-bottom: 1rem;
         }
@@ -336,13 +317,11 @@
             border: none;
             width: 100%;
             text-align: left;
-            /* 收起状态 - 绿色背景白色文字 */
             background-color: var(--primary-color);
             color: white;
             box-shadow: var(--box-shadow);
         }
 
-        /* 展开状态 - 透明背景绿色文字 */
         .category-title:not(.collapsed) {
             background-color: transparent;
             color: var(--primary-dark);
@@ -364,14 +343,9 @@
             margin-right: 0.8rem;
             font-size: 1.3rem;
             transition: var(--transition);
-        }
-
-        /* 收起状态文件夹图标白色 */
-        .category-title i.fa-folder {
             color: white;
         }
 
-        /* 展开状态文件夹图标绿色 */
         .category-title:not(.collapsed) i.fa-folder {
             color: var(--primary-color);
         }
@@ -410,39 +384,13 @@
             opacity: 0;
         }
 
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .container {
-                padding: 0.5rem;
-            }
-
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .search-box {
-                width: 100%;
-                margin-top: 1rem;
-            }
-
-            .category-title {
-                padding: 0.7rem 1rem;
-                font-size: 1.1rem;
-            }
-        }
-
-        /* 临时文件卡片专用样式 - 优化配色版 */
         .temp-file-card {
             display: flex;
             flex-direction: column;
             padding: 0;
             overflow: hidden;
             border-radius: 8px;
-            border-top: 4px solid var(--primary-color, #4CAF50);
+            border-top: 4px solid var(--primary-color);
             background-color: white;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
@@ -457,7 +405,7 @@
 
         .temp-file-card .file-icon {
             font-size: 2rem;
-            color: var(--primary-color, #4CAF50);
+            color: var(--primary-color);
             margin-right: 1rem;
             flex-shrink: 0;
         }
@@ -496,11 +444,9 @@
             line-height: 1.5;
             display: -webkit-box;
             -webkit-line-clamp: 2;
-            /* 限制显示2行 */
             -webkit-box-orient: vertical;
             overflow: hidden;
             max-height: 3em;
-            /* 2行高度 */
             transition: max-height 0.3s ease;
         }
 
@@ -519,7 +465,6 @@
             cursor: pointer;
             font-size: 0.85rem;
             display: none;
-            /* 默认隐藏 */
         }
 
         .temp-file-card .read-more:hover {
@@ -543,7 +488,7 @@
             margin: 0;
             padding: 0.5rem 1.2rem;
             font-size: 0.9rem;
-            background-color: var(--primary-color, #4CAF50);
+            background-color: var(--primary-color);
             color: white;
             border: none;
             border-radius: 4px;
@@ -552,16 +497,14 @@
         }
 
         .temp-file-card .download-btn:hover {
-            background-color: var(--primary-dark, #3d8b40);
+            background-color: var(--primary-dark);
         }
 
-        /* 悬停效果 */
         .temp-file-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
 
-        /* 新增样式：临时文件折叠控制 */
         .temp-files-container {
             position: relative;
         }
@@ -591,6 +534,29 @@
         }
 
         @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0.5rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .search-box {
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            .category-title {
+                padding: 0.7rem 1rem;
+                font-size: 1.1rem;
+            }
+
             .temp-file-card .file-meta {
                 flex-direction: column;
                 gap: 0.3rem;
@@ -625,38 +591,40 @@
                 <h2><i class="fas fa-server"></i> 可用服务</h2>
             </div>
             <div class="grid">
-                {% for service, info in services.items() %}
+                {% for service_id, service_info in services.items() %}
                 <div class="service-card">
-                    <a href="/{{ service }}">
+                    <a href="/{{ service_id }}">
                         <div class="service-icon">
-                            <img src="{{ info.icon.path if info.icon else '/static/icons/default.ico' }}"
-                                alt="{{ info.name }}" class="service-icon-img"
-                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                            {% if service_info.favicon %}
+                            <img src="/favicon/{{ service_id }}" alt="{{ service_info.name }}" class="service-icon-img"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                             <i class="fas fa-globe service-fallback-icon" style="display: none;"></i>
+                            {% else %}
+                            <i class="fas fa-globe service-fallback-icon"></i>
+                            {% endif %}
                         </div>
 
-                        <h3>{{ info.name }}</h3>
-                        <div class="service-meta" style="display: flex; justify-content: center;">
-                            {% set is_local_domain = info.domain and (info.domain == 'localhost' or
-                            info.domain.startswith('10.') or
-                            info.domain.startswith('127.') or info.domain.startswith('192.')) %}
+                        <h3>{{ service_info.name }}</h3>
+                        <div class="service-meta">
+                            {% set is_local_domain = service_info.domain and (service_info.domain == 'localhost' or
+                            service_info.domain.startswith('10.') or
+                            service_info.domain.startswith('127.') or service_info.domain.startswith('192.')) %}
 
-                            {% if info.domain and info.domain != default_domain and not is_local_domain %}
+                            {% if service_info.domain and service_info.domain != default_domain and not is_local_domain
+                            %}
                             <span class="meta-item">
-                                <i class="fas fa-link"></i> {{ info.domain }}
+                                <i class="fas fa-link"></i> {{ service_info.domain }}
                             </span>
                             {% endif %}
 
-                            {% if info.port != 80 %}
+                            {% if service_info.port != 80 %}
                             <span class="meta-item">
-                                <i class="fas fa-network-wired"></i> {{ info.port }}
+                                <i class="fas fa-network-wired"></i> {{ service_info.port }}
                             </span>
                             {% endif %}
                         </div>
                     </a>
                 </div>
-
-
                 {% else %}
                 <div class="empty-state">
                     <i class="fas fa-cloud"></i>
@@ -675,7 +643,6 @@
                     <a href="/upload" class="btn" style="margin: 0 0.5rem 0 0;">
                         <i class="fas fa-upload"></i> 上传文件
                     </a>
-
                 </div>
             </div>
             <div class="temp-files-container">
@@ -790,21 +757,17 @@
             const cards = document.querySelectorAll('.card');
             let hasResults = false;
 
-            // 先隐藏所有卡片和分类
             document.querySelectorAll('.category-section').forEach(section => {
                 section.style.display = 'none';
             });
 
-            // 搜索匹配的文件
             cards.forEach(card => {
                 const fileName = card.getAttribute('data-name').toLowerCase();
                 if (fileName.includes(searchTerm)) {
                     card.style.display = 'flex';
-                    // 显示包含匹配文件的分类
                     const categorySection = card.closest('.category-section');
                     if (categorySection) {
                         categorySection.style.display = 'block';
-                        // 展开分类
                         const categoryFiles = categorySection.querySelector('.category-files');
                         categoryFiles.classList.remove('collapsed');
                         const categoryTitle = categorySection.querySelector('.category-title');
@@ -816,7 +779,6 @@
                 }
             });
 
-            // 如果没有搜索结果，显示提示
             if (!hasResults && searchTerm) {
                 const emptyState = document.createElement('div');
                 emptyState.className = 'empty-state';
@@ -827,21 +789,18 @@
                 `;
 
                 const downloadSection = document.querySelector('section:nth-of-type(2)');
-                // 移除旧的空状态提示（如果有）
                 const oldEmptyState = downloadSection.querySelector('.empty-state');
                 if (oldEmptyState) {
                     oldEmptyState.remove();
                 }
                 downloadSection.appendChild(emptyState);
             } else if (!searchTerm) {
-                // 清空搜索框时恢复所有内容
                 document.querySelectorAll('.category-section').forEach(section => {
                     section.style.display = 'block';
                 });
                 document.querySelectorAll('.card').forEach(card => {
                     card.style.display = 'flex';
                 });
-                // 移除空状态提示（如果有）
                 const emptyState = document.querySelector('section:nth-of-type(2) .empty-state');
                 if (emptyState && emptyState.querySelector('h3').textContent === '没有找到匹配的文件') {
                     emptyState.remove();
@@ -858,8 +817,9 @@
             categoryFiles.classList.toggle('collapsed');
         }
 
-        // 临时文件折叠功能
+        // 页面加载完成后执行
         document.addEventListener('DOMContentLoaded', function () {
+            // 临时文件折叠功能
             const toggleBtn = document.getElementById('toggle-temp-files');
             if (toggleBtn) {
                 const tempFilesGrid = document.getElementById('temp-files-grid');
@@ -875,19 +835,12 @@
                 });
             }
 
-            // 获取当前年份
-            const yearElement = document.querySelector('footer p');
-            if (yearElement) {
-                yearElement.textContent = yearElement.textContent.replace('{{ now().year }}', new Date().getFullYear());
-            }
-
             // 临时文件描述折叠功能
             document.querySelectorAll('.temp-file-card .file-description').forEach(desc => {
                 const content = desc.textContent;
                 const lineHeight = parseInt(window.getComputedStyle(desc).lineHeight);
-                const maxHeight = lineHeight * 2; // 2行高度
+                const maxHeight = lineHeight * 2;
 
-                // 检查内容是否超过2行
                 if (desc.scrollHeight > maxHeight) {
                     const readMore = desc.nextElementSibling;
                     readMore.style.display = 'block';
@@ -897,6 +850,17 @@
                         readMore.textContent = desc.classList.contains('expanded') ? '收起' : '显示更多';
                     });
                 }
+            });
+
+            // 处理图标加载失败的情况
+            document.querySelectorAll('.service-icon-img').forEach(img => {
+                img.onerror = function () {
+                    this.style.display = 'none';
+                    const fallbackIcon = this.nextElementSibling;
+                    if (fallbackIcon) {
+                        fallbackIcon.style.display = 'flex';
+                    }
+                };
             });
         });
     </script>

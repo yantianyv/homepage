@@ -188,7 +188,8 @@ def main_menu():
         elif choice == "5":
             set_title(config)
         elif choice == "6":
-            print("\n感谢使用配置管理系统！再见！")
+            get_favicon.clear_favicons()
+            print("感谢使用配置管理系统！再见！")
             break
         else:
             print("无效的选择，请重新输入。")
@@ -196,4 +197,4 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
-    get_favicon.refresh()
+

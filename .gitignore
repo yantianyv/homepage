@@ -2,7 +2,7 @@ config.json
 README.html
 build/
 files/
-icons/
+favicons/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
