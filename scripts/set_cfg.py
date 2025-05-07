@@ -3,7 +3,7 @@
 import json
 import os
 import platform
-from scripts import service_icons
+from scripts import get_favicon
 
 # 配置文件路径
 CONFIG_FILE = "config.json"
@@ -196,4 +196,4 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
-    service_icons.refresh()
+    get_favicon.refresh()

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import uuid
 import platform
-from scripts import service_icons, set_cfg
+from scripts import get_favicon, set_cfg
 
 PORT = 80
 
@@ -38,7 +38,7 @@ if len(sys.argv) > 1:
         print("Unknown option")
         exit(0)
 
-service_icons.refresh()
+get_favicon.refresh()
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.secret_key = os.urandom(24)
