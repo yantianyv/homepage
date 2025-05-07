@@ -29,7 +29,7 @@ def try_get_favicon(base_url, domain, port):
     """尝试从单个base_url获取favicon"""
     try:
         # 获取首页解析HTML
-        response = requests.get(base_url, headers=DEFAULT_HEADERS, timeout=5, verify=False)
+        response = requests.get(base_url, headers=DEFAULT_HEADERS, timeout=10, verify=False)
         soup = BeautifulSoup(response.text, "html.parser")
 
         # 尝试常见路径
@@ -37,7 +37,7 @@ def try_get_favicon(base_url, domain, port):
         for path in common_paths:
             favicon_url = urljoin(base_url, path)
             try:
-                response = requests.head(favicon_url, headers=DEFAULT_HEADERS, timeout=5, verify=False)
+                response = requests.head(favicon_url, headers=DEFAULT_HEADERS, timeout=10, verify=False)
                 if response.status_code == 200 and 'image/' in response.headers.get('Content-Type', '').lower():
                     content_type = response.headers.get('Content-Type')
                     if 'image' in content_type:
@@ -51,7 +51,7 @@ def try_get_favicon(base_url, domain, port):
             if link.get("href"):
                 favicon_url = urljoin(base_url, link["href"])
                 try:
-                    if requests.head(favicon_url, headers=DEFAULT_HEADERS, timeout=5, verify=False).status_code == 200:
+                    if requests.head(favicon_url, headers=DEFAULT_HEADERS, timeout=10, verify=False).status_code == 200:
                         return favicon_url
                 except:
                     continue
@@ -77,10 +77,10 @@ def get_favicon_url(domain, port):
     with ThreadPoolExecutor(max_workers=32) as executor:
         futures = []
         for base_url in base_urls:
-            # 对每个base_url发起3次并行尝试
-            for _ in range(5):
+            # 对每个base_url发起10次并行尝试
+            for _ in range(10):
                 futures.append(executor.submit(try_get_favicon, base_url, domain, port))
-                time.sleep(1)
+                time.sleep(5)
         
         # 获取第一个成功的结果
         for future in as_completed(futures):
@@ -113,7 +113,6 @@ def download_favicon(service_key, service_info, default_domain):
     
     # 获取favicon URL
     favicon_url = get_favicon_url(service_domain, port)
-    print(f"已得到 {service_key} 的图标链接")
     if not favicon_url:
         print(f"无法获取服务 {service_key} 的favicon URL")
         return
@@ -125,7 +124,7 @@ def download_favicon(service_key, service_info, default_domain):
         response = requests.get(
             favicon_url,
             headers=DEFAULT_HEADERS,
-            timeout=5,
+            timeout=10,
             verify=False,
             stream=True
         )

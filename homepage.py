@@ -8,8 +8,29 @@ from werkzeug.utils import secure_filename
 import uuid
 import platform
 from scripts import get_favicon, set_cfg
+import threading
+import time
 
 PORT = 80
+config_data = {}  # 全局配置变量
+
+def load_config():
+    global config_data,default_domain
+    # 读取配置文件
+    try:
+        with open("config.json", "r", encoding="utf-8") as f:
+            config_data = json.load(f)
+    except:
+        set_cfg.main_menu()
+        os.makedirs(UPLOAD_PATH, exist_ok=True)
+        os.makedirs(FILES_PATH, exist_ok=True)
+        with open("config.json", "r", encoding="utf-8") as f:
+            config_data = json.load(f)
+
+    default_domain = config_data.get("default_domain", "127.0.0.1")
+
+# 初始化加载配置
+load_config()
 
 # 获取启动参数
 if len(sys.argv) > 1:
@@ -27,6 +48,7 @@ if len(sys.argv) > 1:
     # set
     if sys.argv[1] == "--set" or sys.argv[1] == "-s":
         set_cfg.main_menu()
+        load_config()  # 重新加载配置
         exit(0)
     # port
     if sys.argv[1] == "--port" or sys.argv[1] == "-p":
@@ -38,7 +60,14 @@ if len(sys.argv) > 1:
         print("Unknown option")
         exit(0)
 
-get_favicon.refresh()
+# 修改get_favicon.refresh函数调用，使其在完成后重新加载配置
+def refresh_favicon_and_config():
+    while True:
+        get_favicon.refresh()
+        load_config()  # 刷新完成后重新加载配置
+        time.sleep(60)
+
+threading.Thread(target=refresh_favicon_and_config).start()
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.secret_key = os.urandom(24)
@@ -65,18 +94,6 @@ UPLOAD_PATH = os.path.join(BASE_DIR, FILES_PATH, UPLOAD_FOLDER)
 print(f"FILES_PATH: {FILES_PATH} \nUPLOAD_PATH: {UPLOAD_PATH}")
 
 
-# 读取配置文件
-try:
-    with open("config.json", "r", encoding="utf-8") as f:
-        config_data = json.load(f)
-except:
-    set_cfg.main_menu()
-    os.makedirs(UPLOAD_PATH, exist_ok=True)
-    os.makedirs(FILES_PATH, exist_ok=True)
-    with open("config.json", "r", encoding="utf-8") as f:
-        config_data = json.load(f)
-
-default_domain = config_data.get("default_domain", "127.0.0.1")
 
 # 确保目录存在
 os.makedirs(UPLOAD_PATH, exist_ok=True)

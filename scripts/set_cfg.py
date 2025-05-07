@@ -189,7 +189,7 @@ def main_menu():
             set_title(config)
         elif choice == "6":
             get_favicon.clear_favicons()
-            print("感谢使用配置管理系统！再见！")
+            print("感谢使用配置管理系统，配置通常会在1分钟内或下次启动时生效，再见！")
             break
         else:
             print("无效的选择，请重新输入。")
