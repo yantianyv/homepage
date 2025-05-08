@@ -14,6 +14,12 @@ import time
 PORT = 80
 config_data = {}  # 全局配置变量
 
+with open("config.json", "r", encoding="utf-8") as f:
+    config_data = json.load(f)
+config_data["shutdown"] = False
+with open("config.json", "w", encoding="utf-8") as f:
+    json.dump(config_data, f, ensure_ascii=False, indent=4)
+
 def load_config():
     global config_data,default_domain
     # 读取配置文件
@@ -28,9 +34,9 @@ def load_config():
             config_data = json.load(f)
 
     default_domain = config_data.get("default_domain", "127.0.0.1")
-
-# 初始化加载配置
-load_config()
+    if config_data.get("shutdown"):
+        print("服务被关闭")
+        os._exit(0)
 
 # 获取启动参数
 if len(sys.argv) > 1:
@@ -42,13 +48,13 @@ if len(sys.argv) > 1:
         -h, --help            Show this help message
         -s, --set             Set configuration
         -p, --port            Run with port(default: {PORT})
+        --shutdown            Shutdown server
         """
         print(help_text)
         exit(0)
     # set
     if sys.argv[1] == "--set" or sys.argv[1] == "-s":
         set_cfg.main_menu()
-        load_config()  # 重新加载配置
         exit(0)
     # port
     if sys.argv[1] == "--port" or sys.argv[1] == "-p":
@@ -56,6 +62,14 @@ if len(sys.argv) > 1:
             PORT = int(sys.argv[2])
         else:
             PORT = 80
+    if sys.argv[1] == "--shutdown":
+        with open("config.json", "r", encoding="utf-8") as f:
+            config_data = json.load(f)
+        config_data["shutdown"] = True
+        with open("config.json", "w", encoding="utf-8") as f:
+            json.dump(config_data, f, ensure_ascii=False, indent=4)
+        print("服务器通常会在1分钟内关闭")
+        exit(0)
     else:
         print("Unknown option")
         exit(0)
@@ -63,9 +77,11 @@ if len(sys.argv) > 1:
 # 修改get_favicon.refresh函数调用，使其在完成后重新加载配置
 def refresh_favicon_and_config():
     while True:
-        get_favicon.refresh()
-        load_config()  # 刷新完成后重新加载配置
-        time.sleep(60)
+        threading.Thread(target=get_favicon.refresh).start()
+        for _ in range(60):
+            load_config()  
+            time.sleep(1)
+
 
 threading.Thread(target=refresh_favicon_and_config).start()
 
