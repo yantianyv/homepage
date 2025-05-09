@@ -307,20 +307,28 @@ def redirect_to_service(service):
 def get_service_favicon(service_id):
     """返回指定服务的favicon图标"""
     try:
+        app.logger.debug(f"Requested favicon for service: {service_id}")
+        
         # 检查服务是否存在
         if service_id not in config_data["services"]:
+            app.logger.error(f"Service not found: {service_id}")
             return "Service not found", 404
         
         # 获取服务的favicon文件名
         favicon_name = config_data["services"][service_id].get("favicon")
         if not favicon_name:
+            app.logger.error(f"No favicon configured for service: {service_id}")
             return "Favicon not configured for this service", 404
+        
+        app.logger.debug(f"Favicon filename: {favicon_name}")
         
         # 构建favicon文件路径
         favicon_path = os.path.join(BASE_DIR, "favicons", favicon_name)
+        app.logger.debug(f"Full favicon path: {favicon_path}")
         
         # 检查文件是否存在
         if not os.path.exists(favicon_path):
+            app.logger.error(f"Favicon file not found at: {favicon_path}")
             return "Favicon file not found", 404
         
         # 根据文件扩展名设置正确的MIME类型
@@ -334,8 +342,10 @@ def get_service_favicon(service_id):
             '.gif': 'image/gif'
         }
         mimetype = mime_types.get(ext, 'application/octet-stream')
+        app.logger.debug(f"Detected MIME type: {mimetype} for extension {ext}")
         
         # 发送文件
+        app.logger.info(f"Serving favicon for {service_id}: {favicon_name}")
         return send_from_directory(
             directory=os.path.join(BASE_DIR, "favicons"),
             path=favicon_name,
@@ -343,7 +353,7 @@ def get_service_favicon(service_id):
         )
         
     except Exception as e:
-        app.logger.error(f"Error serving favicon for {service_id}: {e}")
+        app.logger.error(f"Error serving favicon for {service_id}: {str(e)}", exc_info=True)
         return "Internal server error", 500
 
 @app.route("/upload", methods=["GET", "POST"])
