@@ -229,7 +229,7 @@ def refresh():
         task_queue.put((service_key, service_info))
 
     # 创建工作线程
-    thread_count = min(32, len(services))  # 最多32个线程
+    thread_count = min(8, len(services))  # 最多32个线程
     threads = []
     for i in range(thread_count):
         t = threading.Thread(target=worker, args=(task_queue, default_domain))

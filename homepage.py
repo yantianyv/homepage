@@ -14,12 +14,6 @@ import time
 PORT = 80
 config_data = {}  # 全局配置变量
 
-with open("config.json", "r", encoding="utf-8") as f:
-    config_data = json.load(f)
-config_data["shutdown"] = False
-with open("config.json", "w", encoding="utf-8") as f:
-    json.dump(config_data, f, ensure_ascii=False, indent=4)
-
 def load_config():
     global config_data,default_domain
     # 读取配置文件
@@ -51,11 +45,11 @@ if len(sys.argv) > 1:
         --shutdown            Shutdown server
         """
         print(help_text)
-        exit(0)
+        sys.exit(0)
     # set
     if sys.argv[1] == "--set" or sys.argv[1] == "-s":
         set_cfg.main_menu()
-        exit(0)
+        sys.exit(0)
     # port
     if sys.argv[1] == "--port" or sys.argv[1] == "-p":
         if len(sys.argv) > 2:
@@ -69,25 +63,13 @@ if len(sys.argv) > 1:
         with open("config.json", "w", encoding="utf-8") as f:
             json.dump(config_data, f, ensure_ascii=False, indent=4)
         print("服务器通常会在1分钟内关闭")
-        exit(0)
+        sys.exit(0)
     else:
         print("Unknown option")
-        exit(0)
-
-# 修改get_favicon.refresh函数调用，使其在完成后重新加载配置
-def refresh_favicon_and_config():
-    while True:
-        threading.Thread(target=get_favicon.refresh).start()
-        for _ in range(60):
-            load_config()  
-            time.sleep(1)
-
-
-threading.Thread(target=refresh_favicon_and_config).start()
+        sys.exit(0)
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.secret_key = os.urandom(24)
-
 
 @app.context_processor
 def inject_now():
@@ -116,6 +98,12 @@ os.makedirs(UPLOAD_PATH, exist_ok=True)
 os.makedirs(FILES_PATH, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_PATH
 
+# 重置关闭参数
+with open("config.json", "r", encoding="utf-8") as f:
+    config_data = json.load(f)
+config_data["shutdown"] = False
+with open("config.json", "w", encoding="utf-8") as f:
+    json.dump(config_data, f, ensure_ascii=False, indent=4)
 
 def get_client_info():
     ip = request.headers.get("X-Forwarded-For", request.remote_addr)
@@ -417,7 +405,30 @@ def download_file(filepath):
         print(f"文件{os.path.join(FILES_PATH, filepath)}下载出错")
         return "下载文件时出错", 500
 
-
+def refresh_favicon_and_config():
+    while True:
+        try:
+            get_favicon.refresh()
+        except Exception as e:
+            print(f"刷新图标出错: {e}")
+        for _ in range(60):
+            try:
+                load_config()
+            except Exception as e:
+                print(f"加载配置出错: {e}")
+            time.sleep(1)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=PORT)
+    # 设置守护线程，这样主程序退出时它也退出
+    refresh_thread = threading.Thread(
+        target=refresh_favicon_and_config, 
+        daemon=True  # ← 关键设置
+    )
+    refresh_thread.start()
+
+    # 捕获 Flask 启动异常，确保失败时整个程序退出
+    try:
+        app.run(host="0.0.0.0", port=PORT)
+    except Exception as e:
+        print(f"Flask 启动失败: {e}")
+        os._exit(1)  # ← 强制整个进程退出
