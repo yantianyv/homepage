@@ -97,19 +97,20 @@ UPLOAD_FOLDER = ".tempfiles"
 UPLOAD_PATH = os.path.join(BASE_DIR, FILES_PATH, UPLOAD_FOLDER)
 print(f"FILES_PATH: {FILES_PATH} \nUPLOAD_PATH: {UPLOAD_PATH}")
 
-
-
 # 确保目录存在
 os.makedirs(UPLOAD_PATH, exist_ok=True)
 os.makedirs(FILES_PATH, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_PATH
 
-# 重置关闭参数
-with open("config.json", "r", encoding="utf-8") as f:
-    config_data = json.load(f)
-config_data["shutdown"] = False
-with open("config.json", "w", encoding="utf-8") as f:
-    json.dump(config_data, f, ensure_ascii=False, indent=4)
+try:
+    # 重置关闭参数
+    with open("config.json", "r", encoding="utf-8") as f:
+        config_data = json.load(f)
+    config_data["shutdown"] = False
+    with open("config.json", "w", encoding="utf-8") as f:
+        json.dump(config_data, f, ensure_ascii=False, indent=4)
+except:
+    pass
 
 # 加载配置文件
 load_config()
@@ -322,11 +323,23 @@ def get_service_favicon(service_id):
         if not os.path.exists(favicon_path):
             return "Favicon file not found", 404
         
+        # 根据文件扩展名设置正确的MIME类型
+        _, ext = os.path.splitext(favicon_name.lower())
+        mime_types = {
+            '.ico': 'image/x-icon',
+            '.svg': 'image/svg+xml',
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif'
+        }
+        mimetype = mime_types.get(ext, 'application/octet-stream')
+        
         # 发送文件
         return send_from_directory(
             directory=os.path.join(BASE_DIR, "favicons"),
             path=favicon_name,
-            mimetype="image/x-icon"  # 自动检测MIME类型
+            mimetype=mimetype
         )
         
     except Exception as e:
@@ -429,6 +442,7 @@ def refresh_favicon_and_config():
             time.sleep(1)
 
 if __name__ == "__main__":
+    load_config()
     # 设置守护线程，这样主程序退出时它也退出
     refresh_thread = threading.Thread(
         target=refresh_favicon_and_config, 
