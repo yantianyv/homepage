@@ -37,26 +37,30 @@ if len(sys.argv) > 1:
     # help
     if sys.argv[1] == "--help" or sys.argv[1] == "-h":
         help_text = f"""
-        Usage: python run.py [options]
+        Usage: python homepage.py [options]
         Options:
         -h, --help            Show this help message
-        -s, --set             Set configuration
-        -p, --port            Run with port(default: {PORT})
+        -s, --set            Set configuration
+        -p, --port PORT       Run with specified port (default: {PORT})
         --shutdown            Shutdown server
         """
         print(help_text)
         sys.exit(0)
+    
     # set
-    if sys.argv[1] == "--set" or sys.argv[1] == "-s":
+    elif sys.argv[1] == "--set" or sys.argv[1] == "-s":
         set_cfg.main_menu()
         sys.exit(0)
+    
     # port
-    if sys.argv[1] == "--port" or sys.argv[1] == "-p":
+    elif sys.argv[1] == "--port" or sys.argv[1] == "-p":
         if len(sys.argv) > 2:
             PORT = int(sys.argv[2])
         else:
-            PORT = 80
-    if sys.argv[1] == "--shutdown":
+            print("Error: Port number not specified. Using default port 80.")
+    
+    # shutdown
+    elif sys.argv[1] == "--shutdown":
         with open("config.json", "r", encoding="utf-8") as f:
             config_data = json.load(f)
         config_data["shutdown"] = True
@@ -64,9 +68,11 @@ if len(sys.argv) > 1:
             json.dump(config_data, f, ensure_ascii=False, indent=4)
         print("服务器通常会在1分钟内关闭")
         sys.exit(0)
+    
+    # unknown option
     else:
-        print("Unknown option")
-        sys.exit(0)
+        print(f"Unknown option: {sys.argv[1]}")
+        sys.exit(1)  # 非零退出码表示错误
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.secret_key = os.urandom(24)
@@ -104,6 +110,10 @@ with open("config.json", "r", encoding="utf-8") as f:
 config_data["shutdown"] = False
 with open("config.json", "w", encoding="utf-8") as f:
     json.dump(config_data, f, ensure_ascii=False, indent=4)
+
+# 加载配置文件
+load_config()
+
 
 def get_client_info():
     ip = request.headers.get("X-Forwarded-For", request.remote_addr)
@@ -432,3 +442,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Flask 启动失败: {e}")
         os._exit(1)  # ← 强制整个进程退出
+

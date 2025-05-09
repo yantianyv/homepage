@@ -25,6 +25,8 @@ config_lock = threading.Lock()
 output_dir = "./favicons"
 config_changed = False
 
+os.system("pwd")
+
 def try_get_favicon(base_url, domain, port):
     """尝试从单个base_url获取favicon"""
     try:
