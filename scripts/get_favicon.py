@@ -51,7 +51,7 @@ def fetch_favicon(service_id, service_data, default_domain, skip_existing=True):
     # 检查是否已存在图标文件
     existing_files = list(Path(FAVICON_DIR).glob(f"{service_id}.*"))
     if skip_existing and existing_files:
-        print(f"跳过 {service_id}（图标已存在）")
+        # print(f"跳过 {service_id}（图标已存在）")
         return existing_files[0].name  # 返回现有文件名
 
     # 生成服务 URL
