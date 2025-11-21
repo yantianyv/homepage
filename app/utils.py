@@ -123,6 +123,24 @@ def get_temp_files():
                         description = data.get("description", description)
                         uploader_info = data.get("uploader", {})
                         original_filename = data.get("original_filename", filename)
+                        if "expiration_time" in data:
+                            try:
+                                expiration_time = datetime.fromisoformat(data["expiration_time"])
+                                now = datetime.now()
+                                if expiration_time > now:
+                                    remaining = expiration_time - now
+                                    days = remaining.days
+                                    hours = remaining.seconds // 3600
+                                    minutes = (remaining.seconds % 3600) // 60
+                                    
+                                    if days > 0:
+                                        data["remaining_time"] = f"{days}天{hours}小时"
+                                    elif hours > 0:
+                                        data["remaining_time"] = f"{hours}小时{minutes}分"
+                                    else:
+                                        data["remaining_time"] = f"{minutes}分钟"
+                            except ValueError:
+                                pass
                 except:
                     pass
 
@@ -138,7 +156,9 @@ def get_temp_files():
                     "is_temp": True,
                     "uploader_ip": uploader_info.get("ip", "Unknown"),
                     "uploader_device": uploader_info.get("device", "Unknown"),
-                    "has_password": "password_hash" in data
+                    "uploader_device": uploader_info.get("device", "Unknown"),
+                    "has_password": "password_hash" in data,
+                    "remaining_time": data.get("remaining_time")
                 }
             )
 

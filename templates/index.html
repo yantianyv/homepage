@@ -79,14 +79,19 @@
                         <i class="fas fa-{{ file.icon }}"></i>
                     </div>
                     <div class="file-info">
-                        <h3>{{ file.name }}</h3>
+                        <h3>
+                            {{ file.name }}
+                            {% if file.has_password %}
+                            <i class="fas fa-lock" style="color: #f57c00; font-size: 0.8em; margin-left: 0.5rem;" title="需要密码"></i>
+                            {% endif %}
+                        </h3>
                         <p class="file-description">{{ file.description }}</p>
                         </div>
                         <div class="file-meta">
                             <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
                             <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
-                            {% if file.has_password %}
-                            <span title="需要密码"><i class="fas fa-lock" style="color: #f57c00;"></i></span>
+                            {% if file.remaining_time %}
+                            <span title="剩余有效期" style="color: #1976d2;"><i class="fas fa-hourglass-half"></i> {{ file.remaining_time }}</span>
                             {% endif %}
                         </div>
                     <a href="/download/{{ file.filename }}" class="btn" style="margin-top: 1rem;">
