@@ -99,7 +99,7 @@ def upload_file():
                             break
                         f.write(chunk)
 
-                description = request.form.get("description", "").strip() or "No description provided"
+                description = request.form.get("description", "").strip() or "上传者没有提供描述信息"
                 desc_data = {
                     "description": description, 
                     "uploader": get_client_info(), 
