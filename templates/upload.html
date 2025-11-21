@@ -1,165 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>上传文件 - {{ site_title }}</title>
     <link rel="stylesheet" href="/static/fontawesome-free-6.7.2-web/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        :root {
-            --primary-color: #2e7d32;
-            --primary-light: #4caf50;
-            --primary-dark: #1b5e20;
-            --secondary-color: #689f38;
-            --light-color: #9bcb91;
-            --dark-color: #263238;
-            --text-color: #424242;
-            --border-radius: 10px;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #f5f5f5;
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 1rem;
-        }
-
         .upload-box {
             background: white;
             border-radius: var(--border-radius);
             padding: 2rem;
             box-shadow: var(--box-shadow);
-        }
-
-        h1 {
-            color: var(--primary-dark);
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        input[type="file"],
-        input[type="text"],
-        textarea {
-            width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #ddd;
-            border-radius: var(--border-radius);
-            transition: var(--transition);
-        }
-
-        input[type="file"] {
-            padding: 0.5rem;
-            display: none;
-        }
-
-        input:focus,
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-        }
-
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary-color);
-            color: white;
-            padding: 0.7rem 1.5rem;
-            border-radius: var(--border-radius);
-            text-decoration: none;
-            transition: var(--transition);
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            width: 100%;
-            font-size: 1.1rem;
-        }
-
-        .btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn i {
-            margin-right: 0.5rem;
-        }
-
-        .delete-btn {
-            background: #e57373;
-            color: white;
-            padding: 0.7rem 1rem;
-            border-radius: var(--border-radius);
-            width: 100%;
-            margin-top: 1rem;
-            transition: var(--transition);
-        }
-
-        .delete-btn:hover {
-            background: #d32f2f;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .file-info {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #f9f9f9;
-            border-radius: var(--border-radius);
-            display: none;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 1.5rem;
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .requirements {
-            margin-top: 2rem;
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        .requirements ul {
-            margin-top: 0.5rem;
-            padding-left: 1.5rem;
+            max-width: 800px;
+            margin: 2rem auto;
         }
 
         .dropzone {
@@ -173,6 +27,7 @@
             background: #f9f9f9;
             transition: var(--transition);
             cursor: pointer;
+            margin-bottom: 1.5rem;
         }
 
         .dropzone.hover {
@@ -180,80 +35,11 @@
             border-color: var(--primary-light);
         }
 
-        /* 弹窗样式 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+        .dropzone i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
         }
 
-        .modal-content {
-            background-color: #fff;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: var(--border-radius);
-            width: 80%;
-            max-width: 500px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            animation: modalopen 0.3s;
-        }
-
-        @keyframes modalopen {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .modal-header {
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 15px;
-        }
-
-        .modal-body {
-            padding: 10px 0;
-            margin-bottom: 15px;
-        }
-
-        .modal-footer {
-            padding: 10px 0;
-            border-top: 1px solid #eee;
-            text-align: right;
-        }
-
-        .close-btn {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-        }
-
-        .close-btn:hover {
-            background: var(--primary-dark);
-        }
-
-        .success {
-            color: #2e7d32;
-        }
-
-        .error {
-            color: #c62828;
-        }
-
-        /* 文件列表样式 */
         .file-list {
             margin-top: 1rem;
             display: none;
@@ -288,9 +74,9 @@
 
         .progress-container {
             width: 100%;
-            height: 20px;
+            height: 8px;
             background: #e0e0e0;
-            border-radius: var(--border-radius);
+            border-radius: 4px;
             margin-top: 0.5rem;
             overflow: hidden;
         }
@@ -300,50 +86,136 @@
             background: var(--primary-light);
             width: 0%;
             transition: width 0.3s ease;
-            border-radius: var(--border-radius);
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
+            border-radius: 4px;
         }
 
         .status {
             margin-top: 0.5rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
         }
 
-        .status.uploading {
-            color: var(--primary-color);
+        .status.uploading { color: var(--primary-color); }
+        .status.success { color: #2e7d32; }
+        .status.error { color: #c62828; }
+
+        .form-group { margin-bottom: 1.5rem; }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
         }
 
-        .status.success {
-            color: #2e7d32;
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            min-height: 100px;
+            resize: vertical;
         }
 
-        .status.error {
-            color: #c62828;
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
         }
 
         .upload-summary {
             margin-top: 1rem;
-            padding: 0.5rem;
+            padding: 0.8rem;
             background: #f5f5f5;
             border-radius: var(--border-radius);
             font-size: 0.9rem;
             display: none;
+            text-align: center;
         }
+
+        .requirements {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #666;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .requirements ul {
+            margin-top: 0.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover { text-decoration: underline; }
+        .back-link i { margin-right: 0.5rem; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: modalopen 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalopen {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header { margin-bottom: 1rem; }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; }
+        .modal-header h2.success { color: var(--primary-color); }
+        .modal-header h2.error { color: #c62828; }
+
+        .modal-body { margin-bottom: 1.5rem; color: #555; }
+        
+        .modal-footer { text-align: right; }
+        
+        .close-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover { background: var(--primary-dark); }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="upload-box">
             <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> 返回首页</a>
 
-            <h1><i class="fas fa-upload"></i> 上传临时文件</h1>
+            <h1 style="text-align: center; margin-bottom: 2rem;">上传临时文件</h1>
 
             <form method="post" enctype="multipart/form-data" id="uploadForm">
                 <div class="form-group">
@@ -351,11 +223,9 @@
                         <i class="fas fa-cloud-upload-alt"></i><br>
                         点击或拖拽文件到这里上传 (支持多选)
                     </label>
-                    <input type="file" name="file" id="file" required multiple>
+                    <input type="file" name="file" id="file" required multiple style="display: none;">
 
-                    <div class="file-list" id="file-list">
-                        <!-- 文件列表将在这里动态生成 -->
-                    </div>
+                    <div class="file-list" id="file-list"></div>
                 </div>
 
                 <div class="form-group">
@@ -363,13 +233,12 @@
                     <textarea name="description" id="description" placeholder="请输入文件描述..."></textarea>
                 </div>
 
-                <button type="submit" class="btn"><i class="fas fa-upload"></i> 上传文件</button>
+                <button type="submit" class="btn" style="width: 100%;"><i class="fas fa-upload"></i> 上传文件</button>
 
                 <div class="upload-summary" id="upload-summary">
                     <span id="upload-count">0</span> 个文件正在上传，已完成 <span id="completed-count">0</span> 个
                 </div>
             </form>
-
 
             <div class="requirements">
                 <strong>上传说明:</strong>
@@ -397,278 +266,6 @@
         </div>
     </div>
 
-    <script>
-        const fileInput = document.getElementById('file');
-        const dropzone = document.getElementById('dropzone');
-        const fileList = document.getElementById('file-list');
-        const uploadForm = document.getElementById('uploadForm');
-        const modal = document.getElementById('messageModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalMessage = document.getElementById('modalMessage');
-        const modalCloseBtn = document.getElementById('modalCloseBtn');
-        const uploadSummary = document.getElementById('upload-summary');
-        const uploadCount = document.getElementById('upload-count');
-        const completedCount = document.getElementById('completed-count');
-
-        // 存储上传状态
-        let uploads = [];
-        let completedUploads = 0;
-
-        // 文件选中后
-        fileInput.addEventListener('change', function (e) {
-            const files = Array.from(e.target.files);
-            if (files.length > 0) {
-                dropzone.style.display = 'none';
-                renderFileList(files);
-                fileList.style.display = 'block';
-            } else {
-                resetUpload();
-            }
-        });
-
-        // 渲染文件列表
-        function renderFileList(files) {
-            fileList.innerHTML = '';
-
-            files.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.dataset.index = index;
-
-                fileItem.innerHTML = `
-                    <div class="file-header">
-                        <span class="file-name">${file.name}</span>
-                        <span class="file-size">${formatFileSize(file.size)}</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="progress-${index}">0%</div>
-                    </div>
-                    <div class="status" id="status-${index}">等待上传</div>
-                `;
-
-                fileList.appendChild(fileItem);
-            });
-        }
-
-        // 拖拽到虚线框时
-        dropzone.addEventListener('dragover', function (e) {
-            e.preventDefault();
-            dropzone.classList.add('hover');
-        });
-
-        dropzone.addEventListener('dragleave', function () {
-            dropzone.classList.remove('hover');
-        });
-
-        dropzone.addEventListener('drop', function (e) {
-            e.preventDefault();
-            dropzone.classList.remove('hover');
-
-            const files = e.dataTransfer.files;
-
-            // 检查是否拖拽了文件夹
-            const hasFolder = Array.from(files).some(file => file.size === 0 && file.type === "");
-            if (hasFolder) {
-                showModal('上传失败', '不支持上传文件夹，请选择具体文件', 'error');
-                return;
-            }
-
-            fileInput.files = files;
-            const event = new Event('change');
-            fileInput.dispatchEvent(event);
-        });
-
-        // 表单提交
-        uploadForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const files = Array.from(fileInput.files);
-            const description = document.getElementById('description').value;
-
-            if (files.length === 0) {
-                showModal('上传失败', '请先选择要上传的文件', 'error');
-                return;
-            }
-
-            // 初始化上传状态
-            uploads = files.map(file => ({
-                file,
-                status: 'pending',
-                progress: 0
-            }));
-
-            completedUploads = 0;
-            uploadCount.textContent = files.length;
-            completedCount.textContent = '0';
-            uploadSummary.style.display = 'block';
-
-            // 并发上传所有文件
-            files.forEach((file, index) => {
-                uploadFile(file, index, description);
-            });
-        });
-
-        // 上传单个文件
-        function uploadFile(file, index, description) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('description', description);
-
-            // 更新状态为上传中
-            updateFileStatus(index, 'uploading', 0);
-
-            const xhr = new XMLHttpRequest();
-
-            xhr.upload.addEventListener('progress', function (e) {
-                if (e.lengthComputable) {
-                    const percentComplete = Math.round((e.loaded / e.total) * 100);
-                    updateFileProgress(index, percentComplete);
-                }
-            });
-
-            xhr.addEventListener('load', function () {
-                try {
-                    const result = JSON.parse(xhr.responseText);
-                    if (result.success) {
-                        updateFileStatus(index, 'success', 100);
-                        completedUploads++;
-                        completedCount.textContent = completedUploads;
-
-                        // 如果所有文件都上传完成
-                        if (completedUploads === uploads.length) {
-                            showModal('上传完成', `所有文件上传成功！共 ${completedUploads} 个文件`, 'success');
-                            resetUpload();
-                            uploadForm.reset();
-                        }
-                    } else {
-                        updateFileStatus(index, 'error', 0, result.message);
-                        completedUploads++;
-                        completedCount.textContent = completedUploads;
-                    }
-                } catch (error) {
-                    updateFileStatus(index, 'error', 0, '解析服务器响应时出错');
-                    completedUploads++;
-                    completedCount.textContent = completedUploads;
-                }
-            });
-
-            xhr.addEventListener('error', function () {
-                updateFileStatus(index, 'error', 0, '上传过程中发生网络错误');
-                completedUploads++;
-                completedCount.textContent = completedUploads;
-            });
-
-            xhr.addEventListener('abort', function () {
-                updateFileStatus(index, 'error', 0, '上传已被取消');
-                completedUploads++;
-                completedCount.textContent = completedUploads;
-            });
-
-            xhr.open('POST', '/upload');
-            xhr.send(formData);
-        }
-
-        // 更新文件上传进度
-        function updateFileProgress(index, percent) {
-            const progressBar = document.getElementById(`progress-${index}`);
-            if (progressBar) {
-                progressBar.style.width = percent + '%';
-                progressBar.textContent = percent + '%';
-            }
-
-            // 更新上传状态对象
-            if (uploads[index]) {
-                uploads[index].progress = percent;
-            }
-        }
-
-        // 更新文件状态
-        function updateFileStatus(index, status, progress, message = '') {
-            const statusElement = document.getElementById(`status-${index}`);
-            if (statusElement) {
-                statusElement.className = `status ${status}`;
-
-                switch (status) {
-                    case 'uploading':
-                        statusElement.textContent = '上传中...';
-                        break;
-                    case 'success':
-                        statusElement.textContent = '上传成功';
-                        break;
-                    case 'error':
-                        statusElement.textContent = message || '上传失败';
-                        break;
-                    default:
-                        statusElement.textContent = '等待上传';
-                }
-            }
-
-            // 更新上传状态对象
-            if (uploads[index]) {
-                uploads[index].status = status;
-                uploads[index].progress = progress;
-                if (message) {
-                    uploads[index].message = message;
-                }
-            }
-        }
-
-        // 关闭弹窗
-        modalCloseBtn.addEventListener('click', function () {
-            modal.style.display = 'none';
-        });
-
-        // 点击弹窗外部关闭
-        window.addEventListener('click', function (e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-
-        // 重置上传状态
-        function resetUpload() {
-            dropzone.style.display = 'block';
-            fileList.style.display = 'none';
-            fileList.innerHTML = '';
-            uploadSummary.style.display = 'none';
-            fileInput.value = '';
-        }
-
-        // 格式化文件大小
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // 显示弹窗
-        function showModal(title, message, type) {
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-
-            if (type === 'success') {
-                modalTitle.className = 'success';
-                modalMessage.className = 'success';
-            } else if (type === 'error') {
-                modalTitle.className = 'error';
-                modalMessage.className = 'error';
-            }
-
-            modal.style.display = 'block';
-        }
-
-        // 检查URL参数显示上传成功消息
-        document.addEventListener('DOMContentLoaded', function () {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('uploaded') === 'true') {
-                showModal('上传成功', '文件上传成功！', 'success');
-                // 清除URL参数
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        });
-    </script>
+    <script src="/static/js/upload.js"></script>
 </body>
-
 </html>

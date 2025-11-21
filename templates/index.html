@@ -1,580 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ site_title }}</title>
     <link rel="stylesheet" href="/static/fontawesome-free-6.7.2-web/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #2e7d32;
-            --primary-light: #4caf50;
-            --primary-dark: #1b5e20;
-            --secondary-color: #689f38;
-            --light-color: #9bcb91;
-            --dark-color: #263238;
-            --text-color: #424242;
-            --border-radius: 10px;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #f5f5f5;
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding: 2rem 1rem;
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
-            color: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            position: relative;
-            overflow: hidden;
-        }
-
-        header::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.05)" d="M0,0 L100,0 L100,100 Q50,80 0,100 Z"></path></svg>');
-            background-size: 100% 100%;
-            opacity: 0.5;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header-description {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
-        }
-
-        h2 {
-            font-size: 1.8rem;
-            margin: 2rem 0 1.5rem;
-            color: var(--primary-dark);
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--primary-light);
-            display: inline-block;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .search-box {
-            padding: 0.5rem 1rem;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            width: 250px;
-            transition: var(--transition);
-        }
-
-        .search-box:focus {
-            outline: none;
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--box-shadow);
-            transition: var(--transition);
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            border-top: 4px solid var(--primary-color);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .service-card {
-            text-align: center;
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--box-shadow);
-            transition: var(--transition);
-            border-top: 4px solid var(--secondary-color);
-        }
-
-        .service-card:hover {
-            background: var(--light-color);
-        }
-
-        .service-card a {
-            color: inherit;
-            text-decoration: none;
-            display: block;
-            height: 100%;
-        }
-
-        .service-domain {
-            font-size: 0.8em;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .service-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            margin: 0 auto 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .service-icon-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .service-fallback-icon {
-            font-size: 2rem;
-            color: var(--primary-color);
-        }
-
-        .service-card h3 {
-            margin-bottom: 0.5rem;
-            font-size: 1.3rem;
-            color: var(--primary-dark);
-        }
-
-        .service-port {
-            display: inline-block;
-            background: var(--light-color);
-            color: var(--primary-dark);
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
-        }
-
-        .service-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 8px;
-            font-size: 0.85em;
-            color: #555;
-            justify-content: center;
-        }
-
-        .meta-item {
-            display: inline-flex;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.05);
-            padding: 4px 8px;
-            border-radius: 12px;
-        }
-
-        .meta-item i {
-            margin-right: 4px;
-            font-size: 0.9em;
-            color: #666;
-        }
-
-        .file-icon {
-            font-size: 2rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-
-        .file-info {
-            flex-grow: 1;
-        }
-
-        .file-info h3 {
-            margin-bottom: 0.5rem;
-            color: var(--text-color);
-            word-break: break-all;
-        }
-
-        .file-description {
-            color: #666;
-            margin-bottom: 1rem;
-        }
-
-        .file-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: #777;
-            margin-top: auto;
-            padding-top: 1rem;
-            border-top: 1px dashed #ddd;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary-color);
-            color: white;
-            padding: 0.7rem 1.5rem;
-            border-radius: var(--border-radius);
-            text-decoration: none;
-            transition: var(--transition);
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            margin-top: 1rem;
-        }
-
-        .btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn i {
-            margin-right: 0.5rem;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #666;
-            grid-column: 1 / -1;
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-        }
-
-        .empty-state i {
-            font-size: 3rem;
-            color: #ddd;
-            margin-bottom: 1rem;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem 0;
-            margin-top: 2rem;
-            color: #666;
-            font-size: 0.9rem;
-            border-top: 1px solid #eee;
-        }
-
-        .category-section {
-            margin-bottom: 1rem;
-        }
-
-        .category-title {
-            font-size: 1.2rem;
-            margin: 0.5rem 0;
-            padding: 0.8rem 1.2rem;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: var(--transition);
-            border: none;
-            width: 100%;
-            text-align: left;
-            background-color: var(--primary-color);
-            color: white;
-            box-shadow: var(--box-shadow);
-        }
-
-        .category-title:not(.collapsed) {
-            background-color: transparent;
-            color: var(--primary-dark);
-            box-shadow: none;
-            padding-left: 0.5rem;
-        }
-
-        .category-title:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .category-title:not(.collapsed):hover {
-            box-shadow: none;
-            transform: none;
-        }
-
-        .category-title i.fa-folder {
-            margin-right: 0.8rem;
-            font-size: 1.3rem;
-            transition: var(--transition);
-            color: white;
-        }
-
-        .category-title:not(.collapsed) i.fa-folder {
-            color: var(--primary-color);
-        }
-
-        .category-title i.fa-chevron-down {
-            font-size: 1rem;
-            transition: transform 0.3s ease;
-        }
-
-        .category-title.collapsed i.fa-chevron-down {
-            transform: rotate(-90deg);
-        }
-
-        .category-count {
-            background-color: rgba(255, 255, 255, 0.3);
-            padding: 0.2rem 0.6rem;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            margin-left: 0.5rem;
-        }
-
-        .category-title:not(.collapsed) .category-count {
-            background-color: rgba(46, 125, 50, 0.1);
-            color: var(--primary-dark);
-        }
-
-        .category-files {
-            transition: all 0.3s ease;
-            overflow: hidden;
-            padding: 0.5rem 0 1rem 1.5rem;
-        }
-
-        .category-files.collapsed {
-            max-height: 0 !important;
-            padding: 0 0 0 1.5rem;
-            opacity: 0;
-        }
-
-        .temp-file-card {
-            display: flex;
-            flex-direction: column;
-            padding: 0;
-            overflow: hidden;
-            border-radius: 8px;
-            border-top: 4px solid var(--primary-color);
-            background-color: white;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-        }
-
-        .temp-file-card .file-header {
-            display: flex;
-            align-items: center;
-            padding: 1.5rem 1.5rem 0.5rem;
-            background-color: white;
-        }
-
-        .temp-file-card .file-icon {
-            font-size: 2rem;
-            color: var(--primary-color);
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
-
-        .temp-file-card .file-title {
-            flex-grow: 1;
-            min-width: 0;
-        }
-
-        .temp-file-card .file-title h3 {
-            margin: 0 0 0.5rem 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: #333;
-        }
-
-        .temp-file-card .file-meta {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.85rem;
-            color: #666;
-        }
-
-        .temp-file-card .file-content {
-            padding: 1rem 1.5rem;
-            flex-grow: 1;
-            border-bottom: 1px solid #f0f0f0;
-            background-color: #fafafa;
-            position: relative;
-        }
-
-        .temp-file-card .file-description {
-            color: #555;
-            margin: 0;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            max-height: 3em;
-            transition: max-height 0.3s ease;
-        }
-
-        .temp-file-card .file-description.expanded {
-            -webkit-line-clamp: unset;
-            max-height: none;
-        }
-
-        .temp-file-card .read-more {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(to right, transparent, #fafafa 50%);
-            padding: 0 1.5rem 0 2rem;
-            color: var(--primary-color);
-            cursor: pointer;
-            font-size: 0.85rem;
-            display: none;
-        }
-
-        .temp-file-card .read-more:hover {
-            text-decoration: underline;
-        }
-
-        .temp-file-card .file-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            background-color: white;
-        }
-
-        .temp-file-card .file-size {
-            font-size: 0.9rem;
-            color: #777;
-        }
-
-        .temp-file-card .download-btn {
-            margin: 0;
-            padding: 0.5rem 1.2rem;
-            font-size: 0.9rem;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .temp-file-card .download-btn:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .temp-file-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-        }
-
-        .temp-files-container {
-            position: relative;
-        }
-
-        .temp-files-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-            transition: all 0.3s ease;
-        }
-
-        .temp-files-grid.collapsed::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 80px;
-            background: linear-gradient(to bottom, transparent, rgba(245, 245, 245, 0.9));
-            pointer-events: none;
-        }
-
-
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .container {
-                padding: 0.5rem;
-            }
-
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .search-box {
-                width: 100%;
-                margin-top: 1rem;
-            }
-
-            .category-title {
-                padding: 0.7rem 1rem;
-                font-size: 1.1rem;
-            }
-
-            .temp-file-card .file-meta {
-                flex-direction: column;
-                gap: 0.3rem;
-            }
-
-            .temp-file-card .file-footer {
-                flex-direction: column;
-                gap: 0.8rem;
-                align-items: flex-start;
-            }
-
-            .temp-file-card .download-btn {
-                align-self: flex-end;
-            }
-
-            .temp-files-grid.collapsed {
-                max-height: 800px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
-
 <body>
     <div class="container">
         <header>
@@ -588,11 +20,11 @@
             </div>
             <div class="grid">
                 {% for service_id, service_info in services.items() %}
-                <div class="service-card">
+                <div class="card service-card">
                     <a href="/{{ service_id }}">
                         <div class="service-icon">
                             {% if service_info.favicon %}
-                            <img src="/favicon/{{ service_id }}" alt="{{ service_info.name }}" class="service-icon-img"
+                            <img src="/favicon/{{ service_id }}" alt="{{ service_info.name }}"
                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                             <i class="fas fa-globe service-fallback-icon" style="display: none;"></i>
                             {% else %}
@@ -606,8 +38,7 @@
                             service_info.domain.startswith('10.') or
                             service_info.domain.startswith('127.') or service_info.domain.startswith('192.')) %}
 
-                            {% if service_info.domain and service_info.domain != default_domain and not is_local_domain
-                            %}
+                            {% if service_info.domain and service_info.domain != default_domain and not is_local_domain %}
                             <span class="meta-item">
                                 <i class="fas fa-link"></i> {{ service_info.domain }}
                             </span>
@@ -636,47 +67,37 @@
             <div class="section-header">
                 <h2><i class="fas fa-clock"></i> 临时文件</h2>
                 <div>
-                    <a href="/upload" class="btn" style="margin: 0 0.5rem 0 0;">
+                    <a href="/upload" class="btn">
                         <i class="fas fa-upload"></i> 上传文件
                     </a>
                 </div>
             </div>
-            <div class="temp-files-container">
-                <div class="temp-files-grid {% if temp_files|length > 6 %}collapsed{% endif %}" id="temp-files-grid">
-                    {% for file in temp_files %}
-                    <div class="card temp-file-card" data-name="{{ file.name }}">
-                        <div class="file-header">
-                            <div class="file-icon">
-                                <i class="fas fa-{{ file.icon }}"></i>
-                            </div>
-                            <div class="file-title">
-                                <h3>{{ file.name }}</h3>
-                                <div class="file-meta">
-                                    <span><i class="fas fa-user"></i> {{ file.uploader_ip }}</span>
-                                    <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="file-content">
-                            <p class="file-description">{{ file.description }}</p>
-                            <span class="read-more">显示更多</span>
-                        </div>
-                        <div class="file-footer">
-                            <span class="file-size"><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
-                            <a href="/download/{{ file.filename }}" class="btn download-btn">
-                                <i class="fas fa-download"></i> 下载
-                            </a>
-                        </div>
+            <div class="grid" id="temp-files-grid">
+                {% for file in temp_files %}
+                <div class="card" data-name="{{ file.name }}">
+                    <div class="file-icon">
+                        <i class="fas fa-{{ file.icon }}"></i>
                     </div>
-                    {% endfor %}
-                </div>
+                    <div class="file-info">
+                        <h3>{{ file.name }}</h3>
+                        <p class="file-description">{{ file.description }}</p>
+                        </div>
+                    <div class="file-meta">
+                        <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
+                        <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+                        </div>
+                    <a href="/download/{{ file.filename }}" class="btn" style="margin-top: 1rem;">
+                        <i class="fas fa-download"></i> 下载
+                    </a>
+                    </div>
+                {% endfor %}
             </div>
         </section>
         {% else %}
         <section>
             <div class="section-header">
                 <h2><i class="fas fa-clock"></i> 临时文件</h2>
-                <a href="/upload" class="btn" style="margin: 0;">
+                <a href="/upload" class="btn">
                     <i class="fas fa-upload"></i> 上传文件
                 </a>
             </div>
@@ -687,15 +108,7 @@
             </div>
         </section>
         {% endif %}
-        <div style="text-align: center; margin-top: 1rem;">
-            {% if temp_files|length > 6 %}
-            <button class="btn" id="toggle-temp-files"
-                style="background: transparent; color: var(--primary-color); margin: 0;">
-                <i class="fas fa-chevron-down"></i> 显示全部
-            </button>
-            {% endif %}
-        </div>
-        <section>
+<section id="downloads-section">
             <div class="section-header">
                 <h2><i class="fas fa-file-download"></i> 资源下载</h2>
                 <input type="text" class="search-box" placeholder="搜索文件..." id="search">
@@ -709,9 +122,9 @@
                         {{ category }}
                         <span class="category-count">{{ files|length }}</span>
                     </span>
-                    <i class="fas fa-chevron-down"></i>
+                    <i class="fas fa-chevron-down" style="transform: rotate(-90deg);"></i>
                 </button>
-                <div class="grid category-files collapsed" id="category-{{ loop.index }}">
+                <div class="grid category-files collapsed" style="display: none;">
                     {% for file in files %}
                     <div class="card" data-name="{{ file.name }}">
                         <div class="file-icon">
@@ -725,7 +138,7 @@
                             <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
                             <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
                         </div>
-                        <a href="/download/{{ file.filename }}" class="btn">
+                        <a href="/download/{{ file.filename }}" class="btn" style="margin-top: 1rem;">
                             <i class="fas fa-download"></i> 下载
                         </a>
                     </div>
@@ -746,163 +159,6 @@
         </footer>
     </div>
 
-    <script>
-        // 文件搜索功能
-        document.getElementById('search').addEventListener('input', function (e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.card');
-            let hasResults = false;
-
-            document.querySelectorAll('.category-section').forEach(section => {
-                section.style.display = 'none';
-            });
-
-            cards.forEach(card => {
-                const fileName = card.getAttribute('data-name').toLowerCase();
-                if (fileName.includes(searchTerm)) {
-                    card.style.display = 'flex';
-                    const categorySection = card.closest('.category-section');
-                    if (categorySection) {
-                        categorySection.style.display = 'block';
-                        const categoryFiles = categorySection.querySelector('.category-files');
-                        categoryFiles.classList.remove('collapsed');
-                        const categoryTitle = categorySection.querySelector('.category-title');
-                        categoryTitle.classList.remove('collapsed');
-                    }
-                    hasResults = true;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            if (!hasResults && searchTerm) {
-                const emptyState = document.createElement('div');
-                emptyState.className = 'empty-state';
-                emptyState.innerHTML = `
-                    <i class="fas fa-search"></i>
-                    <h3>没有找到匹配的文件</h3>
-                    <p>请尝试其他搜索关键词</p>
-                `;
-
-                const downloadSection = document.querySelector('section:nth-of-type(2)');
-                const oldEmptyState = downloadSection.querySelector('.empty-state');
-                if (oldEmptyState) {
-                    oldEmptyState.remove();
-                }
-                downloadSection.appendChild(emptyState);
-            } else if (!searchTerm) {
-                document.querySelectorAll('.category-section').forEach(section => {
-                    section.style.display = 'block';
-                });
-                document.querySelectorAll('.card').forEach(card => {
-                    card.style.display = 'flex';
-                });
-                const emptyState = document.querySelector('section:nth-of-type(2) .empty-state');
-                if (emptyState && emptyState.querySelector('h3').textContent === '没有找到匹配的文件') {
-                    emptyState.remove();
-                }
-            }
-        });
-
-        // 分类折叠功能
-        function toggleCategory(element) {
-            const categoryId = element.nextElementSibling.id;
-            const categoryFiles = document.getElementById(categoryId);
-
-            element.classList.toggle('collapsed');
-            categoryFiles.classList.toggle('collapsed');
-        }
-
-        // 页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function () {
-            // 临时文件折叠功能
-            const toggleBtn = document.getElementById('toggle-temp-files');
-            const tempFilesGrid = document.getElementById('temp-files-grid');
-            
-            if (toggleBtn && tempFilesGrid) {
-                const fileCards = tempFilesGrid.querySelectorAll('.temp-file-card');
-                const totalFiles = fileCards.length;
-                
-                // 动态计算显示数量
-                let visibleCount = 6;
-                if (window.innerWidth < 768) {
-                    visibleCount = 3;
-                }
-                
-                // 初始状态：显示前visibleCount个，隐藏其余
-                let initialCollapsed = false;
-                if (totalFiles > visibleCount) {
-                    fileCards.forEach((card, index) => {
-                        if (index >= visibleCount) {
-                            card.style.display = 'none';
-                        }
-                    });
-                    initialCollapsed = true;
-                    // 更新按钮文本
-                    updateToggleButton(toggleBtn, initialCollapsed);
-                }
-                toggleBtn.dataset.collapsed = initialCollapsed;
-                
-                // 切换显示/隐藏
-                toggleBtn.addEventListener('click', function () {
-                    const isCollapsed = toggleBtn.dataset.collapsed !== 'true';
-                    
-                    fileCards.forEach((card, index) => {
-                        if (!isCollapsed) {
-                            // 展开所有卡片
-                            card.style.display = 'flex';
-                        } else {
-                            // 只显示前visibleCount个卡片
-                            if (index >= visibleCount) {
-                                card.style.display = 'none';
-                            }
-                        }
-                    });
-                    
-                    // 切换状态
-                    toggleBtn.dataset.collapsed = isCollapsed;
-                    updateToggleButton(toggleBtn, isCollapsed);
-                });
-            }
-
-            // 临时文件描述折叠功能
-            document.querySelectorAll('.temp-file-card .file-description').forEach(desc => {
-                const content = desc.textContent;
-                const lineHeight = parseInt(window.getComputedStyle(desc).lineHeight);
-                const maxHeight = lineHeight * 2;
-
-                if (desc.scrollHeight > maxHeight) {
-                    const readMore = desc.nextElementSibling;
-                    readMore.style.display = 'block';
-
-                    readMore.addEventListener('click', function () {
-                        desc.classList.toggle('expanded');
-                        readMore.textContent = desc.classList.contains('expanded') ? '收起' : '显示更多';
-                    });
-                }
-            });
-
-            // 处理图标加载失败的情况
-            document.querySelectorAll('.service-icon-img').forEach(img => {
-                img.onerror = function () {
-                    this.style.display = 'none';
-                    const fallbackIcon = this.nextElementSibling;
-                    if (fallbackIcon) {
-                        fallbackIcon.style.display = 'flex';
-                    }
-                };
-            });
-        });
-
-        // 更新切换按钮的文本
-        function updateToggleButton(btn, isExpanded) {
-            if (!isExpanded) {
-                btn.innerHTML = '<i class="fas fa-chevron-up"></i> 收起';
-            } else {
-                btn.innerHTML = '<i class="fas fa-chevron-down"></i> 显示全部';
-            }
-        }
-    </script>
+    <script src="/static/js/main.js"></script>
 </body>
-
 </html>
