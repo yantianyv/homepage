@@ -53,40 +53,68 @@ def get_file_icon(filename):
             return icon
     return "file"
 
-def cleanup_tempfiles(logger=None):
-    now = datetime.now()
-    if not os.path.exists(UPLOAD_PATH):
-        return
+def cleanup_temp_files():
+    """Clean up temporary files that have expired."""
+    try:
+        now = datetime.now()
+        # Default retention period for legacy files without explicit expiration
+        default_retention = timedelta(hours=24)
         
-    for filename in os.listdir(UPLOAD_PATH):
-        filepath = os.path.join(UPLOAD_PATH, filename)
-        if os.path.isfile(filepath):
+        if not os.path.exists(UPLOAD_PATH):
+            return
+            
+        for filename in os.listdir(UPLOAD_PATH):
+            filepath = os.path.join(UPLOAD_PATH, filename)
+            
+            # Skip description files and part files
+            if filename.startswith(".") or filename.endswith(".part"):
+                continue
+                
             try:
-                stat = os.stat(filepath)
-                file_time = datetime.fromtimestamp(stat.st_mtime)
-                if (now - file_time) > timedelta(hours=24):
+                # Check corresponding description file for expiration time
+                desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
+                expiration_time = None
+                
+                if os.path.exists(desc_file):
+                    try:
+                        with open(desc_file, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                            if "expiration_time" in data:
+                                expiration_time = datetime.fromisoformat(data["expiration_time"])
+                    except:
+                        pass
+                
+                # If no explicit expiration time, use file modification time + default retention
+                if not expiration_time:
+                    file_time = datetime.fromtimestamp(os.path.getmtime(filepath))
+                    expiration_time = file_time + default_retention
+                
+                if now > expiration_time:
                     os.remove(filepath)
-                    desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
+                    # Also remove description file if it exists
                     if os.path.exists(desc_file):
                         os.remove(desc_file)
             except Exception as e:
-                if logger:
-                    logger.error(f"Error deleting temp file {filename}: {e}")
+                print(f"Error cleaning up file {filename}: {e}")
+                
+    except Exception as e:
+        print(f"Error in cleanup task: {e}")
 
 def get_temp_files():
-    cleanup_tempfiles()
+    cleanup_temp_files()
     files = []
     if not os.path.exists(UPLOAD_PATH):
         return files
         
     for filename in os.listdir(UPLOAD_PATH):
         filepath = os.path.join(UPLOAD_PATH, filename)
-        if os.path.isfile(filepath) and not filename.startswith("."):
+        if os.path.isfile(filepath) and not filename.startswith(".") and not filename.endswith(".part"):
             stat = os.stat(filepath)
             desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
             description = "临时文件"
             uploader_info = {}
             original_filename = filename
+            data = {}
 
             if os.path.exists(desc_file):
                 try:
@@ -110,6 +138,7 @@ def get_temp_files():
                     "is_temp": True,
                     "uploader_ip": uploader_info.get("ip", "Unknown"),
                     "uploader_device": uploader_info.get("device", "Unknown"),
+                    "has_password": "password_hash" in data
                 }
             )
 
@@ -149,7 +178,7 @@ def get_downloadable_files():
                 continue
 
             filepath = os.path.join(root, filename)
-            if os.path.isfile(filepath):
+            if os.path.isfile(filepath) and not filename.endswith(".part"):
                 stat = os.stat(filepath)
                 category_files.append(
                     {
@@ -170,7 +199,7 @@ def get_downloadable_files():
     root_files = []
     for filename in os.listdir(FILES_PATH):
         filepath = os.path.join(FILES_PATH, filename)
-        if os.path.isfile(filepath) and filename != "descriptions.json":
+        if os.path.isfile(filepath) and filename != "descriptions.json" and not filename.endswith(".part"):
             stat = os.stat(filepath)
             root_files.append(
                 {

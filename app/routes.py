@@ -1,7 +1,7 @@
 import os
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, request, send_from_directory, jsonify, current_app
 from werkzeug.utils import secure_filename
 from app.config import config, BASE_DIR, UPLOAD_PATH, FILES_PATH, UPLOAD_FOLDER
@@ -76,6 +76,8 @@ def get_service_favicon(service_id):
         current_app.logger.error(f"Error serving favicon: {e}")
         return "Internal server error", 500
 
+from werkzeug.security import generate_password_hash, check_password_hash
+
 @bp.route("/upload", methods=["GET", "POST"])
 def upload_file():
     if request.method == "POST":
@@ -91,21 +93,31 @@ def upload_file():
                 filename = secure_filename(file.filename)
                 unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
                 filepath = os.path.join(UPLOAD_PATH, unique_filename)
+                temp_filepath = filepath + ".part"
 
-                with open(filepath, "wb") as f:
-                    while True:
-                        chunk = file.stream.read(8192)
-                        if not chunk:
-                            break
-                        f.write(chunk)
+                # Use Flask's save method which is optimized (uses shutil.copyfileobj)
+                file.save(temp_filepath)
+                
+                # Atomic move after write is complete
+                os.rename(temp_filepath, filepath)
 
                 description = request.form.get("description", "").strip() or "上传者没有提供描述信息"
+                password = request.form.get("password", "").strip()
+                expiration_hours = int(request.form.get("expiration", 24))
+                
+                upload_time = datetime.now()
+                expiration_time = upload_time + timedelta(hours=expiration_hours)
+                
                 desc_data = {
                     "description": description, 
                     "uploader": get_client_info(), 
-                    "upload_time": datetime.now().isoformat(), 
+                    "upload_time": upload_time.isoformat(), 
+                    "expiration_time": expiration_time.isoformat(),
                     "original_filename": file.filename
                 }
+                
+                if password:
+                    desc_data["password_hash"] = generate_password_hash(password)
 
                 with open(os.path.join(UPLOAD_PATH, f".{unique_filename}.json"), "w", encoding="utf-8") as f:
                     json.dump(desc_data, f, ensure_ascii=False, indent=2)
@@ -119,7 +131,7 @@ def upload_file():
     
     return render_template("upload.html", site_title=config.get("site_title", "Service Navigation Center"))
 
-@bp.route("/download/<path:filepath>")
+@bp.route("/download/<path:filepath>", methods=["GET", "POST"])
 def download_file(filepath):
     try:
         filepath = os.path.normpath(filepath)
@@ -130,23 +142,41 @@ def download_file(filepath):
         if os.path.exists(full_path):
             desc_file = os.path.join(UPLOAD_PATH, f".{filename}.json")
             original_filename = filepath
+            password_hash = None
             
             if os.path.exists(desc_file):
                 try:
                     with open(desc_file, "r", encoding="utf-8") as f:
                         data = json.load(f)
-                        original_filename = data.get("original_filename")
+                        original_filename = data.get("original_filename", filename)
+                        password_hash = data.get("password_hash")
                 except:
                     pass
-                return send_from_directory(os.path.join(FILES_PATH, file_dir), filename, 
-                                             as_attachment=True, download_name=original_filename)
-            else:
-                if file_dir:
-                    return send_from_directory(os.path.join(FILES_PATH, file_dir), filename, 
-                                            as_attachment=True)
+            
+            # Check password protection
+            if password_hash:
+                if request.method == "POST":
+                    password = request.form.get("password", "")
+                    if check_password_hash(password_hash, password):
+                        # Password correct, proceed to download
+                        pass
+                    else:
+                        return render_template("password.html", 
+                                            filename=original_filename, 
+                                            error=True,
+                                            site_title=config.get("site_title", "Service Navigation Center"))
                 else:
-                    return send_from_directory(FILES_PATH, filename, 
-                                          as_attachment=True)
+                    return render_template("password.html", 
+                                        filename=original_filename, 
+                                        error=False,
+                                        site_title=config.get("site_title", "Service Navigation Center"))
+
+            if file_dir:
+                return send_from_directory(os.path.join(FILES_PATH, file_dir), filename, 
+                                        as_attachment=True, download_name=original_filename)
+            else:
+                return send_from_directory(FILES_PATH, filename, 
+                                      as_attachment=True, download_name=original_filename)
         else:
             return "File not found", 404
     except Exception as e:

@@ -82,9 +82,12 @@
                         <h3>{{ file.name }}</h3>
                         <p class="file-description">{{ file.description }}</p>
                         </div>
-                    <div class="file-meta">
-                        <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
-                        <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> {{ file.formatted_size }}</span>
+                            <span><i class="far fa-clock"></i> {{ file.upload_time }}</span>
+                            {% if file.has_password %}
+                            <span title="需要密码"><i class="fas fa-lock" style="color: #f57c00;"></i></span>
+                            {% endif %}
                         </div>
                     <a href="/download/{{ file.filename }}" class="btn" style="margin-top: 1rem;">
                         <i class="fas fa-download"></i> 下载

@@ -30,6 +30,28 @@
                     <textarea name="description" id="description" placeholder="请输入文件描述..."></textarea>
                 </div>
 
+                <div class="form-group">
+                    <label for="password">下载密码 (可选)</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="留空则无需密码访问"
+                        style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: var(--border-radius);">
+                </div>
+                
+                <div class="form-group">
+                    <label for="expiration">有效期</label>
+                    <select name="expiration" id="expiration"
+                        style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: var(--border-radius); background: white;">
+                        <option value="1">1 小时</option>
+                        <option value="3">3 小时</option>
+                        <option value="8">8 小时</option>
+                        <option value="24" selected>24 小时 (默认)</option>
+                        <option value="72">3 天</option>
+                        <option value="168">7 天</option>
+                        <option value="720">30 天</option>
+                        <option value="2160">90 天</option>
+                        <option value="8760">365 天</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="btn btn-block"><i class="fas fa-upload"></i> 上传文件</button>
 
                 <div class="upload-summary" id="upload-summary">
@@ -40,7 +62,7 @@
             <div class="requirements">
                 <strong>上传说明:</strong>
                 <ul>
-                    <li>文件将在24小时后自动删除</li>
+                    <li>文件将在指定有效期后自动删除</li>
                     <li>系统会记录上传者IP和设备信息</li>
                     <li>支持同时上传多个文件</li>
                 </ul>

@@ -91,10 +91,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const files = Array.from(elements.fileInput.files);
         const description = elements.description.value;
+        const submitBtn = elements.uploadForm.querySelector('button[type="submit"]');
 
         if (files.length === 0) {
             showModal('上传失败', '请先选择要上传的文件', 'error');
             return;
+        }
+
+        // Disable submit button
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            const originalBtnContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在上传...';
+            // Store original content to restore later
+            submitBtn.dataset.originalContent = originalBtnContent;
         }
 
         // Reset state
@@ -106,9 +116,17 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.completedCount.textContent = '0';
         elements.uploadSummary.style.display = 'block';
 
-        // Upload files concurrently
-        const uploadPromises = files.map((file, index) => uploadFile(file, index, description));
-        await Promise.allSettled(uploadPromises);
+        try {
+            // Upload files concurrently
+            const uploadPromises = files.map((file, index) => uploadFile(file, index, description));
+            await Promise.allSettled(uploadPromises);
+        } finally {
+            // Re-enable submit button
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = submitBtn.dataset.originalContent || '<i class="fas fa-upload"></i> 上传文件';
+            }
+        }
     }
 
     function uploadFile(file, index, description) {
@@ -116,6 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('description', description);
+
+            const password = document.getElementById('password').value;
+            if (password) {
+                formData.append('password', password);
+            }
+
+            const expiration = document.getElementById('expiration').value;
+            formData.append('expiration', expiration);
 
             updateFileStatus(index, 'uploading', 0);
 
@@ -125,6 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.lengthComputable) {
                     const percent = Math.round((e.loaded / e.total) * 100);
                     updateFileProgress(index, percent);
+                    if (percent === 100) {
+                        updateFileStatus(index, 'processing');
+                    }
                 }
             });
 
@@ -198,11 +227,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const statusText = {
                 'uploading': '上传中...',
+                'processing': '正在保存，请勿关闭页面...',
                 'success': '上传成功',
                 'error': message || '上传失败',
                 'pending': '等待上传'
             };
             statusElement.textContent = statusText[status] || statusText['pending'];
+
+            // Reset color style first
+            statusElement.style.color = '';
+
+            if (status === 'processing') {
+                statusElement.style.color = 'var(--primary-dark)';
+            }
         }
     }
 
@@ -212,6 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.fileList.innerHTML = '';
         elements.uploadSummary.style.display = 'none';
         elements.fileInput.value = '';
+        // Clear uploads state
+        state.uploads = [];
+        state.completedUploads = 0;
     }
 
     function formatFileSize(bytes) {
@@ -241,4 +281,12 @@ document.addEventListener('DOMContentLoaded', () => {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
+
+    // Prevent accidental page close during upload
+    window.addEventListener('beforeunload', (e) => {
+        if (state.uploads.length > 0 && state.completedUploads < state.uploads.length) {
+            e.preventDefault();
+            e.returnValue = '文件正在上传中，确定要离开吗？';
+        }
+    });
 });
