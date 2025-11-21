@@ -514,12 +514,7 @@
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 1.5rem;
             margin-bottom: 3rem;
-        }
-
-        .temp-files-grid.collapsed {
-            max-height: 400px;
-            overflow: hidden;
-            position: relative;
+            transition: all 0.3s ease;
         }
 
         .temp-files-grid.collapsed::after {
@@ -528,10 +523,11 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 100px;
+            height: 80px;
             background: linear-gradient(to bottom, transparent, rgba(245, 245, 245, 0.9));
             pointer-events: none;
         }
+
 
         @media (max-width: 768px) {
             .grid {
@@ -821,17 +817,51 @@
         document.addEventListener('DOMContentLoaded', function () {
             // 临时文件折叠功能
             const toggleBtn = document.getElementById('toggle-temp-files');
-            if (toggleBtn) {
-                const tempFilesGrid = document.getElementById('temp-files-grid');
-
+            const tempFilesGrid = document.getElementById('temp-files-grid');
+            
+            if (toggleBtn && tempFilesGrid) {
+                const fileCards = tempFilesGrid.querySelectorAll('.temp-file-card');
+                const totalFiles = fileCards.length;
+                
+                // 动态计算显示数量
+                let visibleCount = 6;
+                if (window.innerWidth < 768) {
+                    visibleCount = 3;
+                }
+                
+                // 初始状态：显示前visibleCount个，隐藏其余
+                let initialCollapsed = false;
+                if (totalFiles > visibleCount) {
+                    fileCards.forEach((card, index) => {
+                        if (index >= visibleCount) {
+                            card.style.display = 'none';
+                        }
+                    });
+                    initialCollapsed = true;
+                    // 更新按钮文本
+                    updateToggleButton(toggleBtn, initialCollapsed);
+                }
+                toggleBtn.dataset.collapsed = initialCollapsed;
+                
+                // 切换显示/隐藏
                 toggleBtn.addEventListener('click', function () {
-                    tempFilesGrid.classList.toggle('collapsed');
-
-                    if (tempFilesGrid.classList.contains('collapsed')) {
-                        toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i> 显示全部';
-                    } else {
-                        toggleBtn.innerHTML = '<i class="fas fa-chevron-up"></i> 收起';
-                    }
+                    const isCollapsed = toggleBtn.dataset.collapsed !== 'true';
+                    
+                    fileCards.forEach((card, index) => {
+                        if (!isCollapsed) {
+                            // 展开所有卡片
+                            card.style.display = 'flex';
+                        } else {
+                            // 只显示前visibleCount个卡片
+                            if (index >= visibleCount) {
+                                card.style.display = 'none';
+                            }
+                        }
+                    });
+                    
+                    // 切换状态
+                    toggleBtn.dataset.collapsed = isCollapsed;
+                    updateToggleButton(toggleBtn, isCollapsed);
                 });
             }
 
@@ -863,6 +893,15 @@
                 };
             });
         });
+
+        // 更新切换按钮的文本
+        function updateToggleButton(btn, isExpanded) {
+            if (!isExpanded) {
+                btn.innerHTML = '<i class="fas fa-chevron-up"></i> 收起';
+            } else {
+                btn.innerHTML = '<i class="fas fa-chevron-down"></i> 显示全部';
+            }
+        }
     </script>
 </body>
 
