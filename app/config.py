@@ -13,11 +13,8 @@ if "__compiled__" in globals():
 
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 FILES_PATH = os.path.join(BASE_DIR, "files")
-UPLOAD_FOLDER = ".tempfiles"
-UPLOAD_PATH = os.path.join(FILES_PATH, UPLOAD_FOLDER)
 
 # Ensure directories exist
-os.makedirs(UPLOAD_PATH, exist_ok=True)
 os.makedirs(FILES_PATH, exist_ok=True)
 
 class Config:

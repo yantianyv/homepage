@@ -4,7 +4,7 @@ import platform
 from datetime import datetime, timedelta
 from pathlib import Path
 from flask import request
-from app.config import UPLOAD_PATH, FILES_PATH, UPLOAD_FOLDER
+from app.config import FILES_PATH
 
 def get_client_info():
     ip = request.headers.get("X-Forwarded-For", request.remote_addr)
@@ -78,8 +78,7 @@ def get_downloadable_files():
         if rel_path == ".":
             continue
 
-        if rel_path == UPLOAD_FOLDER:
-            continue
+
 
         category_name = rel_path.replace(os.sep, " / ")
         category_files = []
