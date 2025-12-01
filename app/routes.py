@@ -1,7 +1,8 @@
 import os
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, request, send_from_directory, current_app
-from app.config import config, BASE_DIR, FILES_PATH
+from app.config import config, FILES_PATH
+from app import BASE_DIR
 from app.utils import get_downloadable_files
 
 bp = Blueprint('main', __name__)

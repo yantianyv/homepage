@@ -2,13 +2,9 @@ import json
 import os
 import sys
 from scripts import set_cfg
+from app import BASE_DIR, CONFIG_FILE
 
-# Define paths
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if getattr(sys, 'frozen', False):
-    BASE_DIR = os.path.dirname(sys.executable)
-
-CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
+CONFIG_PATH = CONFIG_FILE
 FILES_PATH = os.path.join(BASE_DIR, "files")
 
 # Ensure directories exist

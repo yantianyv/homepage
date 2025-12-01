@@ -1,15 +1,11 @@
 import sys
 import os
 import json
-from app import create_app
+from app import create_app, CONFIG_FILE
 from app.services import start_background_tasks
 from scripts import set_cfg
 
 PORT = 80
-
-CONFIG_FILE = "config.json"
-if getattr(sys, 'frozen', False):
-    CONFIG_FILE = os.path.join(os.path.dirname(sys.executable), "config.json")
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "--help" or sys.argv[1] == "-h":
