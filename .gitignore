@@ -180,3 +180,4 @@ cython_debug/
 .pypirc
 __pycache__
 nohup.out
+nuitka-crash-report.xml
