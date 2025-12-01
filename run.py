@@ -7,6 +7,10 @@ from scripts import set_cfg
 
 PORT = 80
 
+CONFIG_FILE = "config.json"
+if getattr(sys, 'frozen', False):
+    CONFIG_FILE = os.path.join(os.path.dirname(sys.executable), "config.json")
+
 if len(sys.argv) > 1:
     if sys.argv[1] == "--help" or sys.argv[1] == "-h":
         help_text = f"""
@@ -32,10 +36,10 @@ if len(sys.argv) > 1:
     
     elif sys.argv[1] == "--shutdown":
         try:
-            with open("config.json", "r", encoding="utf-8") as f:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 config_data = json.load(f)
             config_data["shutdown"] = True
-            with open("config.json", "w", encoding="utf-8") as f:
+            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=4)
             print("Server will shut down shortly.")
         except Exception as e:
@@ -49,11 +53,11 @@ if len(sys.argv) > 1:
 if __name__ == "__main__":
     # Reset shutdown flag
     try:
-        with open("config.json", "r", encoding="utf-8") as f:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             config_data = json.load(f)
         if config_data.get("shutdown"):
             config_data["shutdown"] = False
-            with open("config.json", "w", encoding="utf-8") as f:
+            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=4)
     except:
         pass

@@ -6,7 +6,10 @@ import platform
 from scripts import get_favicon
 
 # 配置文件路径
+# 配置文件路径
 CONFIG_FILE = "config.json"
+if getattr(sys, 'frozen', False):
+    CONFIG_FILE = os.path.join(os.path.dirname(sys.executable), "config.json")
 
 
 # 清屏函数，支持不同操作系统

@@ -5,11 +5,8 @@ from scripts import set_cfg
 
 # Define paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if "__compiled__" in globals():
-    if os.name == "posix":
-        BASE_DIR = os.getcwd()
-    else:
-        BASE_DIR = os.path.dirname(sys.executable)
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)
 
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 FILES_PATH = os.path.join(BASE_DIR, "files")
