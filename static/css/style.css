@@ -292,7 +292,6 @@ h2 {
 .category-title {
     width: 100%;
     padding: 1rem;
-    background: white;
     border: none;
     border-radius: var(--border-radius);
     display: flex;
@@ -300,10 +299,12 @@ h2 {
     justify-content: space-between;
     cursor: pointer;
     font-size: 1.1rem;
-    color: var(--text-color);
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 1rem;
+    /* Expanded State - Blended */
+        background: transparent;
+        color: var(--primary-dark);
+        box-shadow: none;
 }
 
 .category-title:hover {
@@ -312,15 +313,33 @@ h2 {
 
 .category-title i {
     color: var(--primary-color);
+    transition: color 0.3s ease;
+    }
+    
+    /* Collapsed State - Green Button */
+    .category-title.collapsed {
+        background: var(--primary-color);
+        color: white;
+        box-shadow: var(--box-shadow);
+    }
+    
+    .category-title.collapsed i {
+        color: white;
 }
 
 .category-count {
-    background: var(--light-color);
-    color: var(--primary-dark);
+    background: var(--primary-color);
+        color: white;
     padding: 0.2rem 0.6rem;
     border-radius: 12px;
     font-size: 0.85rem;
     margin-left: 0.5rem;
+    transition: all 0.3s ease;
+    }
+    
+    .category-title.collapsed .category-count {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
 }
 
 .category-files {

@@ -3,6 +3,7 @@ README.html
 build/
 files/
 favicons/
+*.exe
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
